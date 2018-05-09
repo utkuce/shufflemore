@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -43,17 +44,24 @@ public class AuthenticationActivity extends Activity {
     private static String CLIENT_SECRET;
     private final int REQUEST_CODE = 1234;
 
-    @SuppressLint("StaticFieldLeak")
+    private ProgressDialog refreshTokenDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         CLIENT_ID = getString(R.string.CLIENT_ID);
         CLIENT_SECRET = getString(R.string.CLIENT_SECRET);
+        setContentView(R.layout.activity_main);
 
         if (AppData.getRefreshToken(this) == null)
             connectAccount();
+        else
+            setUiName();
+    }
 
+    @SuppressLint("StaticFieldLeak")
+    private void setUiName() {
         new AsyncTask<Void , Void, String>()
         {
             @Override
@@ -64,12 +72,10 @@ public class AuthenticationActivity extends Activity {
 
             @Override
             protected void onPostExecute(String name){
-                setContentView(R.layout.activity_main);
-                String connected = "Connected as " + "<b>" + name + "</b>";
-                ((TextView)findViewById(R.id.textView)).setText(Html.fromHtml(connected));
+                String connected_message = "Connected as " + "<b>" + name + "</b>";
+                ((TextView)findViewById(R.id.textView)).setText(Html.fromHtml(connected_message));
             }
         }.execute();
-
     }
 
     public void connectAccount()
@@ -110,7 +116,7 @@ public class AuthenticationActivity extends Activity {
             JSONObject jsonObject = new JSONObject(response.toString());
             name = jsonObject.get("id").toString();
         }catch (JSONException e){
-            Toast.makeText(this, "JSON error", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "JSON error", Toast.LENGTH_SHORT).show();
         }
 
         return name;
@@ -136,14 +142,31 @@ public class AuthenticationActivity extends Activity {
                     }
 
                 }.execute();
+            } else if (response.getType() == AuthenticationResponse.Type.ERROR) {
+                new AlertDialog.Builder(getApplicationContext())
+                        .setMessage(response.getError())
+                        .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        }).create().show();
             }
         }
     }
 
     private void setRefreshToken(String code)
     {
-        SyncHttpClient client = new SyncHttpClient();
+        final Context context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                refreshTokenDialog = ProgressDialog.show(context, "",
+                        "Refreshing access token...", true);
+            }
+        });
 
+        SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
 
         params.put("client_id", CLIENT_ID);
@@ -176,12 +199,15 @@ public class AuthenticationActivity extends Activity {
                     AppData.expirationTime = System.currentTimeMillis() +
                             Integer.parseInt(jsonObject.get("expires_in").toString()) * 1000;
 
+                    refreshTokenDialog.cancel();
                     //finish();
                     //startActivity(new Intent(context, MainActivity.class));
 
                 } catch (JSONException | IOException e) {
                     e.printStackTrace();
                 }
+
+                setUiName();
 
                 //System.out.println("Access token: " + AppData.accessToken);
                 //System.out.println("Refresh token: " + AppData.refreshToken);
@@ -190,6 +216,7 @@ public class AuthenticationActivity extends Activity {
             @Override
             public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
 
+                refreshTokenDialog.cancel();
                 new AlertDialog.Builder(getApplication())
                         .setTitle("True Shuffle")
                         .setMessage("Connection problem")
@@ -247,9 +274,18 @@ public class AuthenticationActivity extends Activity {
 
                 //((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
                   //      .notify(0, MainActivity.getNotification(context).setContentText("Connection problem").build());
-                System.out.println("Connection problem");
 
-//                throwable.printStackTrace();
+                System.out.println("Failed to retrieve refresh token");
+                new AlertDialog.Builder(context)
+                        .setMessage("Failed to retrieve refresh token")
+                        .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        }).create().show();
+
+                //throwable.printStackTrace();
             }
         });
     }
