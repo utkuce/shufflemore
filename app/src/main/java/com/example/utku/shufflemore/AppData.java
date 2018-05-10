@@ -82,16 +82,7 @@ class AppData {
 
     }
 
-    static String getAccessToken(Context context)
-    {
-        if (tokenExpired() || accessToken == null)
-            AuthenticationActivity.useRefreshToken(context);
-
-        //System.out.println("Access Token: " + accessToken);
-        return accessToken;
-    }
-
-    private static boolean tokenExpired()
+    public static boolean tokenExpired()
     {
         return expirationTime <= System.currentTimeMillis();
     }

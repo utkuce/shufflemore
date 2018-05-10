@@ -1,9 +1,7 @@
 package com.example.utku.shufflemore;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -12,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -37,14 +34,14 @@ import javax.net.ssl.HttpsURLConnection;
 import cz.msebera.android.httpclient.Header;
 
 
-public class AuthenticationActivity extends Activity {
+public class AuthenticationActivity extends MainActivity {
 
     private final String REDIRECT_URI = "shufflemore://callback";
     private static String CLIENT_ID;
     private static String CLIENT_SECRET;
     private final int REQUEST_CODE = 1234;
 
-    private ProgressDialog refreshTokenDialog;
+    private ProgressDialog tokenDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,22 +49,21 @@ public class AuthenticationActivity extends Activity {
 
         CLIENT_ID = getString(R.string.CLIENT_ID);
         CLIENT_SECRET = getString(R.string.CLIENT_SECRET);
-        setContentView(R.layout.activity_main);
 
         if (AppData.getRefreshToken(this) == null)
             connectAccount();
         else
-            setUiName();
+            connected();
     }
 
     @SuppressLint("StaticFieldLeak")
-    private void setUiName() {
+    private void connected() {
         new AsyncTask<Void , Void, String>()
         {
             @Override
             protected String doInBackground (Void... v)
             {
-                return displayName();
+                return getDisplayName();
             }
 
             @Override
@@ -87,7 +83,7 @@ public class AuthenticationActivity extends Activity {
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
-    private String displayName()
+    private String getDisplayName()
     {
         HttpsURLConnection conn;
         StringBuilder response = new StringBuilder();
@@ -97,7 +93,7 @@ public class AuthenticationActivity extends Activity {
             URL url = new URL("https://api.spotify.com/v1/me/");
             conn = (HttpsURLConnection) url.openConnection();
             conn.setRequestProperty("Accept", "application/json");
-            conn.setRequestProperty("Authorization", "Bearer " + AppData.getAccessToken(this));
+            conn.setRequestProperty("Authorization", "Bearer " + getAccessToken());
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
                 for (String line; (line = reader.readLine()) != null; ) {
@@ -161,8 +157,8 @@ public class AuthenticationActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                refreshTokenDialog = ProgressDialog.show(context, "",
-                        "Refreshing access token...", true);
+                tokenDialog = ProgressDialog.show(context, "",
+                        "Retrieving refresh token...", true);
             }
         });
 
@@ -199,7 +195,6 @@ public class AuthenticationActivity extends Activity {
                     AppData.expirationTime = System.currentTimeMillis() +
                             Integer.parseInt(jsonObject.get("expires_in").toString()) * 1000;
 
-                    refreshTokenDialog.cancel();
                     //finish();
                     //startActivity(new Intent(context, MainActivity.class));
 
@@ -207,7 +202,7 @@ public class AuthenticationActivity extends Activity {
                     e.printStackTrace();
                 }
 
-                setUiName();
+                connected();
 
                 //System.out.println("Access token: " + AppData.accessToken);
                 //System.out.println("Refresh token: " + AppData.refreshToken);
@@ -216,9 +211,8 @@ public class AuthenticationActivity extends Activity {
             @Override
             public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
 
-                refreshTokenDialog.cancel();
                 new AlertDialog.Builder(getApplication())
-                        .setTitle("True Shuffle")
+                        .setTitle("ShuffleMore")
                         .setMessage("Connection problem")
                         .setNeutralButton("OK", new DialogInterface.OnClickListener() {
                             @Override
@@ -230,13 +224,35 @@ public class AuthenticationActivity extends Activity {
 
                 //throwable.printStackTrace();
             }
+
+            @Override
+            public void onFinish() {
+                tokenDialog.cancel();
+            }
         });
     }
 
-    public static void useRefreshToken( final Context context)
+    private String getAccessToken()
     {
-        SyncHttpClient client = new SyncHttpClient();
+        if (AppData.tokenExpired() || AppData.accessToken == null)
+            setAccessToken();
 
+        //System.out.println("Access Token: " + AppData.accessToken);
+        return AppData.accessToken;
+    }
+
+    public void setAccessToken()
+    {
+        final Context context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                tokenDialog = ProgressDialog.show(context, "",
+                        "Retrieving access token...", true);
+            }
+        });
+
+        SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
 
         params.put("client_id", CLIENT_ID);
@@ -286,6 +302,11 @@ public class AuthenticationActivity extends Activity {
                         }).create().show();
 
                 //throwable.printStackTrace();
+            }
+
+            @Override
+            public void onFinish() {
+                tokenDialog.cancel();
             }
         });
     }
