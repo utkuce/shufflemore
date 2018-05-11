@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -74,16 +73,7 @@ public class AuthenticationActivity extends MainActivity {
                 String connected_message = "Connected as " + "<b>" + name + "</b>";
                 ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
 
-                RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
-                if (newSong != null) {
-                    ((TextView)findViewById(R.id.song_name)).setText(
-                            String.format("%s\n%s", newSong.name, newSong.artist));
-
-                    ImageView coverArt = findViewById(R.id.cover_art);
-                    coverArt.setMaxWidth(coverArt.getMeasuredHeight());
-                    coverArt.setImageBitmap(newSong.cover);
-                }
-
+                setNextSong(context);
             }
 
         }.execute();

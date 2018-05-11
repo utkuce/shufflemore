@@ -27,6 +27,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class RandomSongProvider
 {
     private static int totalTracks = -1;
+    public static Song chosenSong;
 
     public void addToHistory(Context context, String url)
     {
@@ -77,6 +78,7 @@ public class RandomSongProvider
             } while (history.contains(song.url) && song.url == null);
         }
 
+        chosenSong = song;
         return song;
     }
 
