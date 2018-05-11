@@ -58,6 +58,7 @@ public class AuthenticationActivity extends MainActivity {
 
     @SuppressLint("StaticFieldLeak")
     private void connected() {
+        final Context context = this;
         new AsyncTask<Void , Void, String>()
         {
             @Override
@@ -68,9 +69,14 @@ public class AuthenticationActivity extends MainActivity {
 
             @Override
             protected void onPostExecute(String name){
+
                 String connected_message = "Connected as " + "<b>" + name + "</b>";
-                ((TextView)findViewById(R.id.textView)).setText(Html.fromHtml(connected_message));
+                ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
+
+                RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
+                ((TextView)findViewById(R.id.song_name)).setText(newSong.url);
             }
+
         }.execute();
     }
 
