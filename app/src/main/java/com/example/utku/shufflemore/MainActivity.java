@@ -1,7 +1,10 @@
 package com.example.utku.shufflemore;
 
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,6 +17,7 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
 
     RandomSongProvider randomSongProvider;
+    BroadcastReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,12 +25,42 @@ public class MainActivity extends AppCompatActivity {
 
         randomSongProvider = new RandomSongProvider();
         setContentView(R.layout.activity_main);
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (action.equals("shufflemore.playnext")) {
+                    System.out.println("playnext received");
+                    playChosen();
+                } else if (action.equals("shufflemore.changenext")) {
+                    System.out.println("changenext received");
+                    setNextSong(context);
+                }
+            }
+        };
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("shufflemore.playnext");
+        filter.addAction("shufflemore.changenext");
+        registerReceiver(receiver, filter);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(receiver);
+        stopService(new Intent(this, PlayBackReceiverService.class));
     }
 
     public void playButton(View v) {
+        playChosen();
+    }
+
+    private void playChosen() {
         RandomSongProvider.Song s;
         if ((s = RandomSongProvider.chosenSong) != null) {
-            playSong(s.url);
+            playSong(s.uri);
         }
     }
 
@@ -34,13 +68,13 @@ public class MainActivity extends AppCompatActivity {
         setNextSong(this);
     }
 
-    public void playSong(String url) {
+    public void playSong(String uri) {
 
+        RandomSongProvider.currentSongUri = uri;
         startActivity(new Intent(Intent.ACTION_VIEW)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .setData(Uri.parse(url)));
-
-        randomSongProvider.addToHistory(this, url);
+                .setData(Uri.parse(uri)));
+        randomSongProvider.addToHistory(this, uri);
         setNextSong(this);
     }
 
@@ -69,6 +103,13 @@ public class MainActivity extends AppCompatActivity {
                             ImageView coverArt = findViewById(R.id.cover_art);
                             coverArt.setMaxWidth(coverArt.getMeasuredHeight());
                             coverArt.setImageBitmap(newSong.cover);
+
+                            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
+                                    .notify(0, PlayBackReceiverService.getNotification(context)
+                                            .setContentTitle(newSong.name)
+                                            .setContentText(newSong.artist)
+                                            .setLargeIcon(newSong.cover)
+                                            .build());
                         }
                     }
                 });

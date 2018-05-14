@@ -74,6 +74,7 @@ public class AuthenticationActivity extends MainActivity {
                 ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
 
                 setNextSong(context);
+                startService(new Intent(context, PlayBackReceiverService.class));
             }
 
         }.execute();

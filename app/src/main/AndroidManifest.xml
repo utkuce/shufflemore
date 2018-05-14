@@ -18,6 +18,9 @@
         </activity>
 
         <activity android:name=".MainActivity"/>
+
+        <service android:name=".PlayBackReceiverService"/>
+
     </application>
 
 </manifest>

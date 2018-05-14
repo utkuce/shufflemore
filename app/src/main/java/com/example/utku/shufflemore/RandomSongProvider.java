@@ -28,12 +28,13 @@ public class RandomSongProvider
 {
     private static int totalTracks = -1;
     public static Song chosenSong;
+    public static String currentSongUri;
 
-    public void addToHistory(Context context, String url)
+    public void addToHistory(Context context, String uri)
     {
         Vector<String> history = AppData.getHistory(context);
         if (history != null) {
-            history.add(url);
+            history.add(uri);
             while (history.size() > totalTracks * 0.5)
                 history.removeElementAt(0);
             AppData.setHistory(history,context);
@@ -43,7 +44,7 @@ public class RandomSongProvider
     }
 
     public class Song {
-        String url, name, artist, album;
+        String uri, name, artist;
         Bitmap cover;
     }
 
@@ -75,7 +76,7 @@ public class RandomSongProvider
                     break;
                 }
 
-            } while (history.contains(song.url) && song.url == null);
+            } while (history.contains(song.uri) && song.uri == null);
         }
 
         chosenSong = song;
@@ -152,9 +153,8 @@ public class RandomSongProvider
             JSONObject saved_track = new JSONObject(itemsArray.get(0).toString());
             JSONObject track = saved_track.getJSONObject("track");
 
-            // url
-            JSONObject external_urls = track.getJSONObject("external_urls");
-            song.url = external_urls.get("spotify").toString();
+            // uri
+            song.uri = track.get("uri").toString();
 
             // artist
             JSONArray artists = track.getJSONArray("artists");
@@ -170,7 +170,7 @@ public class RandomSongProvider
             // cover
             JSONObject album = track.getJSONObject("album");
             JSONArray images = album.getJSONArray("images");
-            String coverUrl = images.getJSONObject(0).get("url").toString();
+            String coverUrl = images.getJSONObject(0).get("url").toString(); //TODO image quality option
 
             song.cover = drawableFromUrl(coverUrl);
 
