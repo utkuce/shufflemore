@@ -94,12 +94,20 @@ public class PlayBackReceiverService extends Service {
         PendingIntent changeNext = PendingIntent.getBroadcast(context, 1, changeButton,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        return new Notification.Builder(context)
+        Notification.Builder builder =  new Notification.Builder(context)
                 .setSubText("Next up on ShuffleMore")
                 .addAction(R.mipmap.baseline_shuffle_black_24, "Change", changeNext)
                 .setSmallIcon(R.mipmap.ic_queue_music_black_24dp)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true);
 
+        if (!RandomSongProvider.chosenSongs.isEmpty()) {
+            RandomSongProvider.Song firstSong = RandomSongProvider.chosenSongs.get(0);
+            builder.setLargeIcon(firstSong.cover)
+                    .setContentTitle(firstSong.name)
+                    .setContentText(firstSong.artist);
+        }
+
+        return builder;
     }
 }

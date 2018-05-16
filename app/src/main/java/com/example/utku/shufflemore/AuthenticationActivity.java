@@ -73,7 +73,8 @@ public class AuthenticationActivity extends MainActivity {
                 String connected_message = "Connected as " + "<b>" + name + "</b>";
                 ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
 
-                setNextSong(context);
+                if (RandomSongProvider.chosenSongs.isEmpty())
+                    changeNextSong(context);
                 startService(new Intent(context, PlayBackReceiverService.class));
             }
 

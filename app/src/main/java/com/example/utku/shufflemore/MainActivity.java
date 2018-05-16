@@ -8,23 +8,26 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
     RandomSongProvider randomSongProvider;
     BroadcastReceiver receiver;
+    TrackRowAdapter trackRowAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         randomSongProvider = new RandomSongProvider();
-        setContentView(R.layout.activity_main);
+        RecyclerView songList = findViewById(R.id.song_list);
+        trackRowAdapter = new TrackRowAdapter(RandomSongProvider.chosenSongs);
+        songList.setAdapter(trackRowAdapter);
+        songList.setLayoutManager(new LinearLayoutManager(this));
 
         receiver = new BroadcastReceiver() {
             @Override
@@ -35,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
                     playChosen();
                 } else if (action.equals("shufflemore.changenext")) {
                     System.out.println("changenext received");
-                    setNextSong(context);
+                    changeNextSong(context);
                 }
             }
         };
@@ -59,13 +62,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void playChosen() {
         RandomSongProvider.Song s;
-        if ((s = RandomSongProvider.chosenSong) != null) {
+        if ((s = RandomSongProvider.chosenSongs.get(0)) != null) {
             playSong(s.uri);
         }
     }
 
-    public void refreshButton(View v){
-        setNextSong(this);
+    public void addButton(View v){
+        RandomSongProvider.chosenSongs.add(randomSongProvider.getNewSong(this));
+        trackRowAdapter.notifyItemInserted(RandomSongProvider.chosenSongs.size()-1);
     }
 
     public void playSong(String uri) {
@@ -75,34 +79,40 @@ public class MainActivity extends AppCompatActivity {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .setData(Uri.parse(uri)));
         randomSongProvider.addToHistory(this, uri);
-        setNextSong(this);
+
+        RandomSongProvider.chosenSongs.remove(0);
+        RandomSongProvider.chosenSongs.add(randomSongProvider.getNewSong(this));
+        trackRowAdapter.notifyDataSetChanged();
+
+        RandomSongProvider.Song newSong = RandomSongProvider.chosenSongs.get(0);
+        ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
+                .notify(0, PlayBackReceiverService.getNotification(this)
+                        .setContentTitle(newSong.name)
+                        .setContentText(newSong.artist)
+                        .setLargeIcon(newSong.cover)
+                        .build());
+
     }
 
-    public void setNextSong(final Context context) {
-
-        final ProgressBar pb = findViewById(R.id.progressBar4);
-        final LinearLayout ly = findViewById(R.id.card_inner);
-        pb.setVisibility(View.VISIBLE);
-        ly.setVisibility(View.INVISIBLE);
+    public void changeNextSong(final Context context) {
 
         new Thread(new Runnable() {
             @Override
             public void run() {
+
                 final RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
+                if (RandomSongProvider.chosenSongs.isEmpty())
+                    RandomSongProvider.chosenSongs.add(newSong);
+                else
+                    RandomSongProvider.chosenSongs.set(0, newSong);
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
-                        pb.setVisibility(View.GONE);
-                        ly.setVisibility(View.VISIBLE);
+                        trackRowAdapter.notifyDataSetChanged();
 
                         if (newSong != null) {
-                            ((TextView)findViewById(R.id.song_name)).setText(
-                                    String.format("%s\n%s", newSong.name, newSong.artist));
-
-                            ImageView coverArt = findViewById(R.id.cover_art);
-                            coverArt.setMaxWidth(coverArt.getMeasuredHeight());
-                            coverArt.setImageBitmap(newSong.cover);
 
                             ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
                                     .notify(0, PlayBackReceiverService.getNotification(context)

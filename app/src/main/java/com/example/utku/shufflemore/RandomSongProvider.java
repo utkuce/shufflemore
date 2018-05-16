@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
@@ -27,8 +28,9 @@ import javax.net.ssl.HttpsURLConnection;
 public class RandomSongProvider
 {
     private static int totalTracks = -1;
-    public static Song chosenSong;
     public static String currentSongUri;
+
+    public static ArrayList<Song> chosenSongs = new ArrayList();
 
     public void addToHistory(Context context, String uri)
     {
@@ -79,7 +81,6 @@ public class RandomSongProvider
             } while (history.contains(song.uri) && song.uri == null);
         }
 
-        chosenSong = song;
         return song;
     }
 
