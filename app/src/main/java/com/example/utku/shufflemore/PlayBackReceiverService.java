@@ -96,8 +96,8 @@ public class PlayBackReceiverService extends Service {
 
         Notification.Builder builder =  new Notification.Builder(context)
                 .setSubText("Next up on ShuffleMore")
-                .addAction(R.mipmap.baseline_shuffle_black_24, "Change", changeNext)
-                .setSmallIcon(R.mipmap.ic_queue_music_black_24dp)
+                .addAction(R.drawable.baseline_shuffle_24, "Change", changeNext)
+                .setSmallIcon(R.drawable.baseline_shuffle_24)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true);
 
