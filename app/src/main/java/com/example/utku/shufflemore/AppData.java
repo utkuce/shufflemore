@@ -17,6 +17,8 @@ class AppData {
     static String accessToken;
     static long expirationTime; //TODO write to file
 
+    static String userId;
+
     static String getRefreshToken(Context context)
     {
         if (refreshToken == null) {

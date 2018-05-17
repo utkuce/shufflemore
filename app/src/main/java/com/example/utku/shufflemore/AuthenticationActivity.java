@@ -76,6 +76,8 @@ public class AuthenticationActivity extends MainActivity {
                 if (RandomSongProvider.chosenSongs.isEmpty())
                     changeNextSong(context);
                 startService(new Intent(context, PlayBackReceiverService.class));
+
+                Playlist.create(context);
             }
 
         }.execute();
@@ -85,7 +87,7 @@ public class AuthenticationActivity extends MainActivity {
     {
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
                 AuthenticationResponse.Type.CODE, REDIRECT_URI);
-        builder.setScopes(new String[]{"user-library-read"});
+        builder.setScopes(new String[]{"user-library-read", "playlist-modify-private"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
@@ -122,6 +124,7 @@ public class AuthenticationActivity extends MainActivity {
             //Toast.makeText(this, "JSON error", Toast.LENGTH_SHORT).show();
         }
 
+        AppData.userId = name;
         return name;
     }
 
@@ -177,7 +180,7 @@ public class AuthenticationActivity extends MainActivity {
 
         params.put("grant_type", "authorization_code");
         params.put("code", code);
-        params.put("scope", "user-library-read");
+        params.put("scope", "user-library-read playlist-modify-private");
         params.put("redirect_uri", REDIRECT_URI);
 
         client.post("https://accounts.spotify.com/api/token", params, new AsyncHttpResponseHandler() {
