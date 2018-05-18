@@ -30,7 +30,12 @@ public class RandomSongProvider
     private static int totalTracks = -1;
     public static String currentSongUri;
 
-    public static ArrayList<Song> chosenSongs = new ArrayList();
+    public static ArrayList<Song> chosenSongs = new ArrayList<>();
+
+    private AppData appData;
+    RandomSongProvider(AppData appData) {
+        this.appData = appData;
+    }
 
     public void addToHistory(Context context, String uri)
     {
@@ -102,7 +107,7 @@ public class RandomSongProvider
 
                         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
                         conn.setRequestProperty("Accept", "application/json");
-                        conn.setRequestProperty("Authorization", "Bearer " + AppData.accessToken);
+                        conn.setRequestProperty("Authorization", "Bearer " + appData.getAccessToken());
 
                         try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
                             for (String line; (line = reader.readLine()) != null; ) {

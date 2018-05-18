@@ -19,11 +19,11 @@ public class Playlist {
     static final String name = ".shufflemore";
     static String id;
 
-    public static void create(final Context context) {
+    Playlist(final Context context, AppData appData) {
 
-        String url = String.format("https://api.spotify.com/v1/users/%s/playlists", AppData.userId);
+        String url = String.format("https://api.spotify.com/v1/users/%s/playlists", appData.userId);
         AsyncHttpClient client = new AsyncHttpClient();
-        client.addHeader("Authorization", "Bearer " + AppData.accessToken);
+        client.addHeader("Authorization", "Bearer " + appData.getAccessToken());
 
         JSONObject jsonParams = new JSONObject();
         StringEntity data = null;

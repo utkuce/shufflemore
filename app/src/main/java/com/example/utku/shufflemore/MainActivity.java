@@ -15,15 +15,20 @@ import android.view.View;
 public class MainActivity extends AppCompatActivity {
 
     RandomSongProvider randomSongProvider;
-    BroadcastReceiver receiver;
-    TrackRowAdapter trackRowAdapter;
+    AppData appData;
+
+    private BroadcastReceiver receiver;
+    private TrackRowAdapter trackRowAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        randomSongProvider = new RandomSongProvider();
+        appData = new AppData(this);
+        randomSongProvider = new RandomSongProvider(appData);
+
         RecyclerView songList = findViewById(R.id.song_list);
         trackRowAdapter = new TrackRowAdapter(RandomSongProvider.chosenSongs);
         songList.setAdapter(trackRowAdapter);
@@ -38,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
                     playChosen();
                 } else if (action.equals("shufflemore.changenext")) {
                     System.out.println("changenext received");
-                    changeNextSong(context);
+                    changeNextSong();
                 }
             }
         };
@@ -94,8 +99,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void changeNextSong(final Context context) {
+    public void changeNextSong() {
 
+        final Context context = this;
         new Thread(new Runnable() {
             @Override
             public void run() {
