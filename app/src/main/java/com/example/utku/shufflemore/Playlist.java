@@ -95,9 +95,12 @@ class Playlist {
                             JSONArray playlists = response.getJSONArray("items");
                             for (int i=0; i<playlists.length(); i++) {
 
-                                System.out.println(playlists.getJSONObject(i).get("name").toString());
-                                if (name.equals(playlists.getJSONObject(i).get("name").toString())) {
+                                JSONObject playlist = playlists.getJSONObject(i);
+                                if (name.equals(playlist.get("name").toString())) {
+
                                     alreadyExists = true;
+                                    id = playlist.get("id").toString();
+                                    System.out.println("Playlist id: " + id);
                                 }
                             }
 
@@ -113,5 +116,54 @@ class Playlist {
                 });
 
         return alreadyExists;
+    }
+
+    static void addTrack(final Context context, AppData appData, String uri) {
+
+        String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", appData.userId, id);
+
+        SyncHttpClient client = new SyncHttpClient();
+        client.addHeader("Authorization", "Bearer " + appData.getAccessToken());
+
+        JSONObject jsonParams = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(uri);
+
+        StringEntity data = null;
+
+        try {
+
+            jsonParams.put("uris", jsonArray);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            data = new StringEntity(jsonParams.toString());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        System.out.print(jsonParams);
+
+        client.post(context, url, data, "application/json", new JsonHttpResponseHandler() {
+
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+                System.out.println(response);
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject res) {
+
+                //Toast.makeText(context, statusCode + " Playlist not created", Toast.LENGTH_LONG).show();
+                System.out.println(statusCode + " res: " + res);
+            }
+
+        });
+
     }
 }

@@ -73,8 +73,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void addButton(View v){
-        RandomSongProvider.chosenSongs.add(randomSongProvider.getNewSong(this));
+        final RandomSongProvider.Song newSong = randomSongProvider.getNewSong(this);
+        RandomSongProvider.chosenSongs.add(newSong);
         trackRowAdapter.notifyItemInserted(RandomSongProvider.chosenSongs.size()-1);
+
+        final Context context = this;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Playlist.addTrack(context, appData, newSong.uri);
+            }
+        }).start();
+
     }
 
     public void playSong(String uri) {
