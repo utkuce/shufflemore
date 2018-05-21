@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.widget.Toast;
 
-import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
 
@@ -145,18 +145,16 @@ public class AppData {
         params.put("grant_type", "refresh_token");
         params.put("refresh_token", getRefreshToken());
 
-        client.post("https://accounts.spotify.com/api/token", params, new AsyncHttpResponseHandler() {
+        client.post("https://accounts.spotify.com/api/token", params, new JsonHttpResponseHandler() {
 
             @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
+            public void onSuccess(int i, Header[] headers, JSONObject response) {
 
                 try {
 
-                    JSONObject jsonObject = new JSONObject(new String(bytes));
-
-                    setAccessToken(jsonObject.get("access_token").toString());
+                    setAccessToken(response.get("access_token").toString());
                     expirationTime = System.currentTimeMillis() +
-                            Integer.parseInt(jsonObject.get("expires_in").toString()) * 1000;
+                            Integer.parseInt(response.get("expires_in").toString()) * 1000;
 
                     System.out.println("Access token refreshed");
 
@@ -166,11 +164,10 @@ public class AppData {
             }
 
             @Override
-            public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+            public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
 
-                System.out.println("Http request failed: " + i);
-                if (bytes != null)
-                    System.out.println(new String(bytes));
+                System.out.println("Http request failed: " + statusCode);
+                System.out.println(response);
 
                 //((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
                 //      .notify(0, MainActivity.getNotification(context).setContentText("Connection problem").build());
@@ -184,12 +181,6 @@ public class AppData {
 
                             }
                         }).create().show();
-
-                //throwable.printStackTrace();
-            }
-
-            @Override
-            public void onFinish() {
             }
         });
     }
