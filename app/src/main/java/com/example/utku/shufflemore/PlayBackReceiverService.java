@@ -19,7 +19,6 @@ public class PlayBackReceiverService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction("com.spotify.music.playbackstatechanged");
         filter.addAction("com.spotify.music.metadatachanged");
         registerReceiver(receiver, filter);
         System.out.println("Playback state service started");
@@ -50,34 +49,16 @@ public class PlayBackReceiverService extends Service {
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
 
-        boolean[] playing = new boolean[2];
-
         @Override
         public void onReceive(Context context, Intent intent) {
 
             String action = intent.getAction();
-            if (action != null) {
-                if (action.equals("com.spotify.music.playbackstatechanged"))
-                {
-                    playing[0] = playing[1];
-                    playing[1] = intent.getBooleanExtra("playing", false);
-                    int positionInMs = intent.getIntExtra("playbackPosition", 0);
+            if (action != null && action.equals("com.spotify.music.metadatachanged")) {
 
-                    System.out.println("Playback state changed. Pos: " + positionInMs
-                            + " playing: " + playing[1] + " previously: " + playing[0]);
+                //TODO save playlist position to return back later
+                System.out.println("Metadata changed");
+                //sendBroadcast(new Intent("shufflemore.playnext"));
 
-                    if (positionInMs == 0 && !playing[1] && playing[0]){
-                        System.out.println("Song finished, starting next");
-                        sendBroadcast(new Intent("shufflemore.playnext"));
-                    }
-                } else if (action.equals("com.spotify.music.metadatachanged")) {
-                    String uri;
-                    if ((uri = RandomSongProvider.currentSongUri) != null)
-                        if (!intent.getStringExtra("id").equals(uri)) {
-                            System.out.println("Song finished, starting next");
-                            sendBroadcast(new Intent("shufflemore.playnext"));
-                        }
-                }
             } else {
                 Toast.makeText(context, "Intent action is empty", Toast.LENGTH_LONG).show();
             }
