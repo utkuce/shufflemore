@@ -66,15 +66,30 @@ public class AuthenticatedActivity extends MainActivity {
                 ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
 
                 if (RandomSongProvider.chosenSongs.isEmpty())
-                    changeNextSong();
-                startService(new Intent(context, PlayBackReceiverService.class));
+                    new Thread(new Runnable() {
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        spotifyPlaylist = new Playlist(context, appData);
-                    }
-                }).start();
+                        @Override
+                        public void run() {
+
+                            spotifyPlaylist = new Playlist(context, appData);
+                            RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks(appData));
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    trackRowAdapter.notifyDataSetChanged();
+                                }
+                            });
+                        }
+
+                    }).start();
+
+                /*
+                if (RandomSongProvider.chosenSongs.isEmpty())
+                    changeNextSong();
+                */
+
+                startService(new Intent(context, PlayBackReceiverService.class));
             }
 
         }.execute();

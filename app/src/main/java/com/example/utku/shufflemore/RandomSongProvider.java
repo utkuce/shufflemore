@@ -50,7 +50,7 @@ public class RandomSongProvider
             Toast.makeText(context, "Cant read song history", Toast.LENGTH_LONG).show();
     }
 
-    public class Song {
+    public static class Song {
         String uri, name, artist;
         Bitmap cover;
     }
@@ -65,7 +65,7 @@ public class RandomSongProvider
 
             do {
                 int offset = new Random(System.currentTimeMillis()).nextInt(totalTracks + 1);
-                String response = spotifyRequest(offset);
+                JSONObject response = getTrack(offset);
                 song = getSongProperties(response);
 
                 if (song == null) {
@@ -90,14 +90,15 @@ public class RandomSongProvider
     }
 
     @SuppressLint("StaticFieldLeak")
-    private String spotifyRequest(final int offset)
+    private JSONObject getTrack(final int offset)
     {
 
         try {
-            return new AsyncTask<Void , Void, String>()
+
+            return new AsyncTask<Void , Void, JSONObject>()
             {
                 @Override
-                protected String doInBackground (Void... v)
+                protected JSONObject doInBackground (Void... v)
                 {
                     StringBuilder response = new StringBuilder();
 
@@ -121,7 +122,22 @@ public class RandomSongProvider
                         e.printStackTrace();
                     }
 
-                    return response.toString();
+                    JSONObject track = null;
+                    try {
+
+                        JSONObject jsonObject = new JSONObject(response.toString());
+                        totalTracks = Integer.parseInt(jsonObject.get("total").toString());
+                        System.out.println("Total tracks: " + totalTracks);
+                        JSONArray itemsArray = jsonObject.getJSONArray("items");
+
+                        JSONObject saved_track = new JSONObject(itemsArray.get(0).toString());
+                        track = saved_track.getJSONObject("track");
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    return track;
                 }
 
             }.execute().get();
@@ -135,29 +151,14 @@ public class RandomSongProvider
 
     private int getTotalTracks()
     {
-        String response = spotifyRequest(0);
-
-        try {
-            JSONObject jsonObject = new JSONObject(response);
-            return Integer.parseInt(jsonObject.get("total").toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return -1;
+        return 900; //TODO actual number
     }
 
-    private Song getSongProperties(String response) {
+    static Song getSongProperties(JSONObject track) {
 
         Song song = new Song();
 
         try {
-
-            JSONObject jsonObject = new JSONObject(response);
-            JSONArray itemsArray = jsonObject.getJSONArray("items");
-
-            JSONObject saved_track = new JSONObject(itemsArray.get(0).toString());
-            JSONObject track = saved_track.getJSONObject("track");
 
             // uri
             song.uri = track.get("uri").toString();
@@ -190,7 +191,7 @@ public class RandomSongProvider
     }
 
     @SuppressLint("StaticFieldLeak")
-    private Bitmap drawableFromUrl(final String url) {
+    private static Bitmap drawableFromUrl(final String url) {
 
         try {
             return new AsyncTask<Void,Void,Bitmap>() {

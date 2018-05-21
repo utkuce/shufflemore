@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.entity.StringEntity;
@@ -118,7 +119,7 @@ class Playlist {
         return alreadyExists;
     }
 
-    static void addTrack(final Context context, AppData appData, String uri) {
+    void addTrack(final Context context, AppData appData, String uri) {
 
         String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", appData.userId, id);
 
@@ -145,8 +146,6 @@ class Playlist {
             e.printStackTrace();
         }
 
-        System.out.print(jsonParams);
-
         client.post(context, url, data, "application/json", new JsonHttpResponseHandler() {
 
 
@@ -165,5 +164,49 @@ class Playlist {
 
         });
 
+    }
+
+    ArrayList<RandomSongProvider.Song> songList = new ArrayList<>();
+    ArrayList<RandomSongProvider.Song> getTracks(AppData appData) {
+
+        songList.clear();
+        String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", appData.userId, id);
+
+        SyncHttpClient client = new SyncHttpClient();
+        RequestParams params = new RequestParams();
+
+        client.addHeader("Authorization", "Bearer " + appData.getAccessToken());
+        params.put("Accept", "application/json");
+
+        client.get(url, params,
+
+                new JsonHttpResponseHandler() {
+
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+                        try {
+
+                            JSONArray tracks = response.getJSONArray("items");
+                            for (int i=0; i<tracks.length(); i++) {
+
+                                JSONObject track = tracks.getJSONObject(i).getJSONObject("track");
+                                System.out.println("Track name: " + track.get("name").toString());
+                                songList.add(RandomSongProvider.getSongProperties(track));
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
+                        System.out.println(response);
+                    }
+                });
+
+        return songList;
     }
 }
