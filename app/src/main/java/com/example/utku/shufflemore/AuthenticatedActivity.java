@@ -72,7 +72,7 @@ public class AuthenticatedActivity extends MainActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        new Playlist(context, appData);
+                        spotifyPlaylist = new Playlist(context, appData);
                     }
                 }).start();
             }

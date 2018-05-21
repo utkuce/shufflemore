@@ -17,8 +17,10 @@ public class MainActivity extends AppCompatActivity {
     RandomSongProvider randomSongProvider;
     AppData appData;
 
+    Playlist spotifyPlaylist;
+
     private BroadcastReceiver receiver;
-    private TrackRowAdapter trackRowAdapter;
+    TrackRowAdapter trackRowAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Playlist.addTrack(context, appData, newSong.uri);
+                spotifyPlaylist.addTrack(context, appData, newSong.uri);
             }
         }).start();
 
