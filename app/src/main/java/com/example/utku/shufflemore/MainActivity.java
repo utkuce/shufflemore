@@ -12,6 +12,15 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+
+import org.json.JSONArray;
+
+import cz.msebera.android.httpclient.Header;
+import cz.msebera.android.httpclient.client.ResponseHandler;
+
 public class MainActivity extends AppCompatActivity {
 
     RandomSongProvider randomSongProvider;
@@ -37,13 +46,11 @@ public class MainActivity extends AppCompatActivity {
         songList.setLayoutManager(new LinearLayoutManager(this));
 
         receiver = new BroadcastReceiver() {
+
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
-                if (action.equals("shufflemore.playnext")) {
-                    System.out.println("playnext received");
-                    playChosen();
-                } else if (action.equals("shufflemore.changenext")) {
+                if (action.equals("shufflemore.changenext")) {
                     System.out.println("changenext received");
                     changeNextSong();
                 }
@@ -51,30 +58,25 @@ public class MainActivity extends AppCompatActivity {
         };
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction("shufflemore.playnext");
         filter.addAction("shufflemore.changenext");
         registerReceiver(receiver, filter);
     }
 
     @Override
     protected void onDestroy() {
+
         super.onDestroy();
         unregisterReceiver(receiver);
         stopService(new Intent(this, PlayBackReceiverService.class));
     }
 
     public void playButton(View v) {
-        playChosen();
-    }
 
-    private void playChosen() {
-        RandomSongProvider.Song s;
-        if ((s = RandomSongProvider.chosenSongs.get(0)) != null) {
-            playSong(s.uri);
-        }
+        spotifyPlaylist.startPlayback(this, appData);
     }
 
     public void addButton(View v){
+
         final RandomSongProvider.Song newSong = randomSongProvider.getNewSong(this);
         RandomSongProvider.chosenSongs.add(newSong);
         trackRowAdapter.notifyItemInserted(RandomSongProvider.chosenSongs.size()-1);
@@ -86,28 +88,6 @@ public class MainActivity extends AppCompatActivity {
                 spotifyPlaylist.addTrack(context, appData, newSong.uri);
             }
         }).start();
-
-    }
-
-    public void playSong(String uri) {
-
-        RandomSongProvider.currentSongUri = uri;
-        startActivity(new Intent(Intent.ACTION_VIEW)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .setData(Uri.parse(uri)));
-        randomSongProvider.addToHistory(this, uri);
-
-        RandomSongProvider.chosenSongs.remove(0);
-        RandomSongProvider.chosenSongs.add(randomSongProvider.getNewSong(this));
-        trackRowAdapter.notifyDataSetChanged();
-
-        RandomSongProvider.Song newSong = RandomSongProvider.chosenSongs.get(0);
-        ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
-                .notify(0, PlayBackReceiverService.getNotification(this)
-                        .setContentTitle(newSong.name)
-                        .setContentText(newSong.artist)
-                        .setLargeIcon(newSong.cover)
-                        .build());
 
     }
 

@@ -39,6 +39,7 @@ public class AuthenticatedActivity extends MainActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
 
         if (appData.getRefreshToken() == null)
@@ -49,6 +50,7 @@ public class AuthenticatedActivity extends MainActivity {
 
     @SuppressLint("StaticFieldLeak")
     private void userIsAuthenticated() {
+
         final Context context = this;
         new AsyncTask<Void , Void, Void>()
         {
@@ -95,17 +97,17 @@ public class AuthenticatedActivity extends MainActivity {
         }.execute();
     }
 
-    public void authenticateUser()
-    {
+    public void authenticateUser() {
+
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(appData.CLIENT_ID,
                 AuthenticationResponse.Type.CODE, REDIRECT_URI);
-        builder.setScopes(new String[]{"user-library-read", "playlist-modify-private", "playlist-read-private"});
+        builder.setScopes(new String[]{"user-library-read", "playlist-modify-private", "playlist-read-private", "user-modify-playback-state"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
-    private void setUserId()
-    {
+    private void setUserId() {
+
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
 
@@ -141,6 +143,7 @@ public class AuthenticatedActivity extends MainActivity {
     @SuppressLint("StaticFieldLeak")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+
         super.onActivityResult(requestCode, resultCode, intent);
 
         if (requestCode == REQUEST_CODE)
@@ -172,8 +175,8 @@ public class AuthenticatedActivity extends MainActivity {
         }
     }
 
-    private void retrieveRefreshToken(String code)
-    {
+    private void retrieveRefreshToken(String code) {
+
         final Context context = this;
         runOnUiThread(new Runnable() {
             @Override
@@ -190,7 +193,7 @@ public class AuthenticatedActivity extends MainActivity {
 
         params.put("grant_type", "authorization_code");
         params.put("code", code);
-        params.put("scope", "user-library-read playlist-modify-private playlist-read-private");
+        params.put("scope", "user-library-read playlist-modify-private playlist-read-private user-modify-playback-state");
         params.put("redirect_uri", REDIRECT_URI);
 
         client.post("https://accounts.spotify.com/api/token", params, new JsonHttpResponseHandler() {

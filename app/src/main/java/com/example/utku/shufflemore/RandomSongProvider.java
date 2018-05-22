@@ -28,8 +28,6 @@ import javax.net.ssl.HttpsURLConnection;
 public class RandomSongProvider
 {
     private static int totalTracks = -1;
-    public static String currentSongUri;
-
     public static ArrayList<Song> chosenSongs = new ArrayList<>();
 
     private AppData appData;
@@ -65,8 +63,8 @@ public class RandomSongProvider
 
             do {
                 int offset = new Random(System.currentTimeMillis()).nextInt(totalTracks + 1);
-                JSONObject response = getTrack(offset);
-                song = getSongProperties(response);
+                JSONObject response = getTrackObject(offset);
+                song = getTrackProperties(response);
 
                 if (song == null) {
 
@@ -90,7 +88,7 @@ public class RandomSongProvider
     }
 
     @SuppressLint("StaticFieldLeak")
-    private JSONObject getTrack(final int offset)
+    private JSONObject getTrackObject(final int offset)
     {
 
         try {
@@ -154,7 +152,7 @@ public class RandomSongProvider
         return 900; //TODO actual number
     }
 
-    static Song getSongProperties(JSONObject track) {
+    static Song getTrackProperties(JSONObject track) {
 
         Song song = new Song();
 

@@ -3,6 +3,8 @@ package com.example.utku.shufflemore;
 import android.content.Context;
 import android.widget.Toast;
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
@@ -152,7 +154,7 @@ class Playlist {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
-                System.out.println(response);
+                System.out.println("New track added to playlist");
             }
 
             @Override
@@ -166,7 +168,7 @@ class Playlist {
 
     }
 
-    ArrayList<RandomSongProvider.Song> songList = new ArrayList<>();
+    private ArrayList<RandomSongProvider.Song> songList = new ArrayList<>();
     ArrayList<RandomSongProvider.Song> getTracks(AppData appData) {
 
         songList.clear();
@@ -192,7 +194,7 @@ class Playlist {
 
                                 JSONObject track = tracks.getJSONObject(i).getJSONObject("track");
                                 System.out.println("Track name: " + track.get("name").toString());
-                                songList.add(RandomSongProvider.getSongProperties(track));
+                                songList.add(RandomSongProvider.getTrackProperties(track));
                             }
 
                         } catch (JSONException e) {
@@ -208,5 +210,45 @@ class Playlist {
                 });
 
         return songList;
+    }
+
+    void startPlayback(final Context context, AppData appData) {
+
+        String url = "https://api.spotify.com/v1/me/player/play";
+        AsyncHttpClient client = new AsyncHttpClient();
+
+        client.addHeader("Authorization", "Bearer " + appData.getAccessToken());
+
+        JSONObject jsonParams = new JSONObject();
+        StringEntity data = null;
+
+        try {
+
+            jsonParams.put("context_uri", String.format("spotify:user:%s:playlist:%s", appData.userId, Playlist.id));
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            data = new StringEntity(jsonParams.toString());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        client.put(context, url, data, "application/json", new AsyncHttpResponseHandler() {
+
+            @Override
+            public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                System.out.println("Playlist playback started");
+            }
+
+            @Override
+            public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+
+                Toast.makeText(context, "Playlist playback error: " + i, Toast.LENGTH_SHORT).show();
+                System.out.println("Playlist playback error: " + i + new String(bytes));
+            }
+        });
     }
 }
