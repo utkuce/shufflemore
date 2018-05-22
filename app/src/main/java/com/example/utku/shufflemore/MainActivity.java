@@ -1,25 +1,17 @@
 package com.example.utku.shufflemore;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
-
-import org.json.JSONArray;
-
-import cz.msebera.android.httpclient.Header;
-import cz.msebera.android.httpclient.client.ResponseHandler;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -75,20 +67,28 @@ public class MainActivity extends AppCompatActivity {
         spotifyPlaylist.startPlayback(this, appData);
     }
 
+    @SuppressLint("StaticFieldLeak")
     public void addButton(View v){
 
-        final RandomSongProvider.Song newSong = randomSongProvider.getNewSong(this);
-        RandomSongProvider.chosenSongs.add(newSong);
-        trackRowAdapter.notifyItemInserted(RandomSongProvider.chosenSongs.size()-1);
-
         final Context context = this;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                spotifyPlaylist.addTrack(context, appData, newSong.uri);
-            }
-        }).start();
+        new AsyncTask<Void , Void, RandomSongProvider.Song>() {
 
+            @Override
+            protected RandomSongProvider.Song doInBackground (Void... v) {
+
+                RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
+                spotifyPlaylist.addTrack(context, appData, newSong.uri);
+                return newSong;
+            }
+
+            @Override
+            protected void onPostExecute(RandomSongProvider.Song newSong){
+
+                RandomSongProvider.chosenSongs.add(newSong);
+                trackRowAdapter.notifyItemInserted(RandomSongProvider.chosenSongs.size()-1);
+            }
+
+        }.execute();
     }
 
     public void changeNextSong() {

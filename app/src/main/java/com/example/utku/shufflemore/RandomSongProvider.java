@@ -90,61 +90,45 @@ public class RandomSongProvider
     @SuppressLint("StaticFieldLeak")
     private JSONObject getTrackObject(final int offset)
     {
+        StringBuilder response = new StringBuilder();
 
         try {
 
-            return new AsyncTask<Void , Void, JSONObject>()
-            {
-                @Override
-                protected JSONObject doInBackground (Void... v)
-                {
-                    StringBuilder response = new StringBuilder();
+            final URL url = new URL("https://api.spotify.com/v1/me/tracks?offset="
+                    + Integer.toString(offset) + "&limit=1");
 
-                    try {
-                        final URL url = new URL("https://api.spotify.com/v1/me/tracks?offset="
-                                + Integer.toString(offset) + "&limit=1");
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + appData.getAccessToken());
 
-                        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-                        conn.setRequestProperty("Accept", "application/json");
-                        conn.setRequestProperty("Authorization", "Bearer " + appData.getAccessToken());
-
-                        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
-                            for (String line; (line = reader.readLine()) != null; ) {
-                                response.append(line).append("\n");
-                            }
-                        }
-
-                        conn.disconnect();
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    JSONObject track = null;
-                    try {
-
-                        JSONObject jsonObject = new JSONObject(response.toString());
-                        totalTracks = Integer.parseInt(jsonObject.get("total").toString());
-                        System.out.println("Total tracks: " + totalTracks);
-                        JSONArray itemsArray = jsonObject.getJSONArray("items");
-
-                        JSONObject saved_track = new JSONObject(itemsArray.get(0).toString());
-                        track = saved_track.getJSONObject("track");
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                    return track;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
+                for (String line; (line = reader.readLine()) != null; ) {
+                    response.append(line).append("\n");
                 }
+            }
 
-            }.execute().get();
+            conn.disconnect();
 
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return null;
+        JSONObject track = null;
+        try {
+
+            JSONObject jsonObject = new JSONObject(response.toString());
+            totalTracks = Integer.parseInt(jsonObject.get("total").toString());
+            System.out.println("Total tracks: " + totalTracks);
+            JSONArray itemsArray = jsonObject.getJSONArray("items");
+
+            JSONObject saved_track = new JSONObject(itemsArray.get(0).toString());
+            track = saved_track.getJSONObject("track");
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return track;
     }
 
     private int getTotalTracks()
@@ -192,29 +176,16 @@ public class RandomSongProvider
     private static Bitmap drawableFromUrl(final String url) {
 
         try {
-            return new AsyncTask<Void,Void,Bitmap>() {
-                @Override
-                protected Bitmap doInBackground(Void...v) {
-                    try {
 
-                        HttpURLConnection connection = (HttpURLConnection)new URL(url) .openConnection();
-                        connection.setRequestProperty("User-agent","Mozilla/4.0");
+            HttpURLConnection connection = (HttpURLConnection)new URL(url) .openConnection();
+            connection.setRequestProperty("User-agent","Mozilla/4.0");
 
-                        connection.connect();
-                        InputStream input = connection.getInputStream();
+            connection.connect();
+            InputStream input = connection.getInputStream();
 
-                        return BitmapFactory.decodeStream(input);
+            return BitmapFactory.decodeStream(input);
 
-                    }catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    return null;
-                }
-
-            }.execute().get();
-
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

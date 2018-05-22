@@ -35,7 +35,7 @@ public class AuthenticatedActivity extends MainActivity {
     private final String REDIRECT_URI = "shufflemore://callback";
     private final int REQUEST_CODE = 1234;
 
-    private ProgressDialog tokenDialog;
+    private ProgressDialog authDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,11 +52,11 @@ public class AuthenticatedActivity extends MainActivity {
     private void userIsAuthenticated() {
 
         final Context context = this;
-        new AsyncTask<Void , Void, Void>()
-        {
+        new AsyncTask<Void , Void, Void>() {
+
             @Override
-            protected Void doInBackground (Void... v)
-            {
+            protected Void doInBackground (Void... v) {
+
                 setUserId();
                 return null;
             }
@@ -64,37 +64,37 @@ public class AuthenticatedActivity extends MainActivity {
             @Override
             protected void onPostExecute(Void v){
 
-                String connected_message = "Connected as " + "<b>" + appData.userId + "</b>";
-                ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
-
-                if (RandomSongProvider.chosenSongs.isEmpty())
-                    new Thread(new Runnable() {
-
-                        @Override
-                        public void run() {
-
-                            spotifyPlaylist = new Playlist(context, appData);
-                            RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks(appData));
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    trackRowAdapter.notifyDataSetChanged();
-                                }
-                            });
-                        }
-
-                    }).start();
-
-                /*
-                if (RandomSongProvider.chosenSongs.isEmpty())
-                    changeNextSong();
-                */
-
-                startService(new Intent(context, PlayBackReceiverService.class));
+                postAuthentication(context);
             }
 
         }.execute();
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private void postAuthentication(final Context context) {
+
+        String connected_message = "Connected as " + "<b>" + appData.userId + "</b>";
+        ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
+
+        if (RandomSongProvider.chosenSongs.isEmpty())
+            new AsyncTask<Void , Void, Void>()
+            {
+                @Override
+                protected Void doInBackground (Void... v)  {
+
+                    spotifyPlaylist = new Playlist(context, appData);
+                    RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks(appData));
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(Void v){
+
+                    trackRowAdapter.notifyDataSetChanged();
+                    startService(new Intent(context, PlayBackReceiverService.class));
+                }
+
+            }.execute();
     }
 
     public void authenticateUser() {
@@ -107,6 +107,14 @@ public class AuthenticatedActivity extends MainActivity {
     }
 
     private void setUserId() {
+
+        final Context context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                authDialog = ProgressDialog.show(context, "","Retrieving user id...",true);
+            }
+        });
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -136,6 +144,11 @@ public class AuthenticatedActivity extends MainActivity {
 
                         System.out.println(response);
                         Toast.makeText(getApplicationContext(), "Couldn't set user id", Toast.LENGTH_LONG).show();
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        authDialog.cancel();
                     }
                 });
     }
@@ -181,7 +194,7 @@ public class AuthenticatedActivity extends MainActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                tokenDialog = ProgressDialog.show(context, "","Retrieving refresh token...",true);
+                authDialog = ProgressDialog.show(context, "","Retrieving refresh token...",true);
             }
         });
 
@@ -241,7 +254,7 @@ public class AuthenticatedActivity extends MainActivity {
 
             @Override
             public void onFinish() {
-                tokenDialog.cancel();
+                authDialog.cancel();
             }
         });
     }
