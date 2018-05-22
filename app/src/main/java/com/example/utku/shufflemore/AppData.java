@@ -36,7 +36,7 @@ public class AppData {
     private String accessToken;
     public static long expirationTime; //TODO write to file
 
-    String userId;
+    static String userId;
 
     AppData(Context context) {
 

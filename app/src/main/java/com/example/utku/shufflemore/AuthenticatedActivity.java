@@ -57,7 +57,8 @@ public class AuthenticatedActivity extends MainActivity {
             @Override
             protected Void doInBackground (Void... v) {
 
-                setUserId();
+                if (AppData.userId == null)
+                    setUserId();
                 return null;
             }
 
@@ -73,7 +74,7 @@ public class AuthenticatedActivity extends MainActivity {
     @SuppressLint("StaticFieldLeak")
     private void postAuthentication(final Context context) {
 
-        String connected_message = "Connected as " + "<b>" + appData.userId + "</b>";
+        String connected_message = "Connected as " + "<b>" + AppData.userId + "</b>";
         ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
 
         if (RandomSongProvider.chosenSongs.isEmpty())
@@ -131,8 +132,8 @@ public class AuthenticatedActivity extends MainActivity {
 
                         try {
 
-                            appData.userId = response.get("id").toString();
-                            System.out.println("Got user id: " + appData.userId);
+                            AppData.userId = response.get("id").toString();
+                            System.out.println("Got user id: " + AppData.userId);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
