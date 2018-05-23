@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
+import android.text.TextUtils;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +37,15 @@ public class AuthenticatedActivity extends MainActivity {
     private final int REQUEST_CODE = 1234;
 
     private ProgressDialog authDialog;
+
+    final String[] permissions = new String[]{
+
+            "user-library-read",
+            "playlist-modify-private",
+            "playlist-read-private",
+            "user-modify-playback-state",
+            "user-read-private"
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,15 +112,7 @@ public class AuthenticatedActivity extends MainActivity {
 
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(appData.CLIENT_ID,
                 AuthenticationResponse.Type.CODE, REDIRECT_URI);
-        builder.setScopes(
-                new String[]{
-
-                        "user-library-read",
-                        "playlist-modify-private",
-                        "playlist-read-private",
-                        "user-modify-playback-state",
-                        "user-read-private"});
-
+        builder.setScopes(permissions);
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
@@ -218,7 +220,7 @@ public class AuthenticatedActivity extends MainActivity {
 
         params.put("grant_type", "authorization_code");
         params.put("code", code);
-        params.put("scope", "user-library-read playlist-modify-private playlist-read-private user-modify-playback-state user-read-private");
+        params.put("scope", TextUtils.join(" ", permissions));
         params.put("redirect_uri", REDIRECT_URI);
 
         client.post("https://accounts.spotify.com/api/token", params, new JsonHttpResponseHandler() {
