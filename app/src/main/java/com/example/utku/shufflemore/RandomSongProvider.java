@@ -21,7 +21,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Vector;
-import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -51,6 +50,7 @@ public class RandomSongProvider
     public static class Song {
         String uri, name, artist;
         Bitmap cover;
+        boolean playable;
     }
 
     public Song getNewSong(Context context)
@@ -84,6 +84,13 @@ public class RandomSongProvider
             } while (history.contains(song.uri) && song.uri == null);
         }
 
+        if (song!= null && !song.playable) {
+
+            System.out.println(song.name + " is not playable, getting another song");
+            song = getNewSong(context);
+        }
+
+        System.out.println("Chosen song: " + song.name);
         return song;
     }
 
@@ -162,6 +169,17 @@ public class RandomSongProvider
             String coverUrl = images.getJSONObject(0).get("url").toString(); //TODO image quality option
 
             song.cover = drawableFromUrl(coverUrl);
+
+            // playable
+            JSONArray availableMarkets = (JSONArray) track.get("available_markets");
+            song.playable = false;
+            if (availableMarkets != null) {
+                for (int i=0;i<availableMarkets.length();i++){
+                    if (availableMarkets.getString(i).equals(AppData.userCountry)) {
+                        song.playable = true;
+                    }
+                }
+            }
 
             return song;
 

@@ -37,6 +37,8 @@ public class AppData {
     public static long expirationTime; //TODO write to file
 
     static String userId;
+    static String userCountry;
+
 
     AppData(Context context) {
 

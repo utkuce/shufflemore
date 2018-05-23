@@ -58,7 +58,7 @@ public class AuthenticatedActivity extends MainActivity {
             protected Void doInBackground (Void... v) {
 
                 if (AppData.userId == null)
-                    setUserId();
+                    setUserInfo();
                 return null;
             }
 
@@ -102,12 +102,20 @@ public class AuthenticatedActivity extends MainActivity {
 
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(appData.CLIENT_ID,
                 AuthenticationResponse.Type.CODE, REDIRECT_URI);
-        builder.setScopes(new String[]{"user-library-read", "playlist-modify-private", "playlist-read-private", "user-modify-playback-state"});
+        builder.setScopes(
+                new String[]{
+
+                        "user-library-read",
+                        "playlist-modify-private",
+                        "playlist-read-private",
+                        "user-modify-playback-state",
+                        "user-read-private"});
+
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
 
-    private void setUserId() {
+    private void setUserInfo() {
 
         final Context context = this;
         runOnUiThread(new Runnable() {
@@ -134,6 +142,9 @@ public class AuthenticatedActivity extends MainActivity {
 
                             AppData.userId = response.get("id").toString();
                             System.out.println("Got user id: " + AppData.userId);
+
+                            AppData.userCountry = response.get("country").toString();
+                            System.out.println("Got user country: " + AppData.userCountry);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -207,7 +218,7 @@ public class AuthenticatedActivity extends MainActivity {
 
         params.put("grant_type", "authorization_code");
         params.put("code", code);
-        params.put("scope", "user-library-read playlist-modify-private playlist-read-private user-modify-playback-state");
+        params.put("scope", "user-library-read playlist-modify-private playlist-read-private user-modify-playback-state user-read-private");
         params.put("redirect_uri", REDIRECT_URI);
 
         client.post("https://accounts.spotify.com/api/token", params, new JsonHttpResponseHandler() {
