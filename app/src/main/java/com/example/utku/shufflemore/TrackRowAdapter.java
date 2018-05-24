@@ -1,6 +1,9 @@
 package com.example.utku.shufflemore;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -15,9 +18,12 @@ import java.util.List;
 public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHolder> {
 
     private List<Song> chosenSongs;
+    private Playlist spotifyPlaylist;
 
-    TrackRowAdapter(List<Song> chosenSongs) {
+    TrackRowAdapter(List<Song> chosenSongs, Playlist spotifyPlaylist) {
+
         this.chosenSongs = chosenSongs;
+        this.spotifyPlaylist = spotifyPlaylist;
     }
 
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -35,9 +41,33 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
             itemView.setOnClickListener(this);
         }
 
+        @SuppressLint("StaticFieldLeak")
         @Override
         public void onClick(View v) {
-            System.out.println("clicked" + getAdapterPosition());
+
+
+            final int index = getAdapterPosition();
+            final Song clickedSong = chosenSongs.get(index);
+            System.out.println("clicked " + clickedSong.name);
+
+            new AsyncTask<Void , Void, Boolean>()
+            {
+                @Override
+                protected Boolean doInBackground (Void... v)  {
+                    return spotifyPlaylist.removeTrack(clickedSong.uri);
+                }
+
+                @Override
+                protected void onPostExecute(Boolean success){
+
+                    if (success) {
+
+                        chosenSongs.remove(index);
+                        notifyDataSetChanged();
+                    }
+                }
+
+            }.execute();
         }
     }
 

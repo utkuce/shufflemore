@@ -93,7 +93,9 @@ public class AuthenticatedActivity extends MainActivity {
                 @Override
                 protected Void doInBackground (Void... v)  {
 
-                    spotifyPlaylist = new Playlist(context, appData);
+                    if (!spotifyPlaylist.alreadyExists())
+                        spotifyPlaylist.create();
+
                     RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks());
                     return null;
                 }

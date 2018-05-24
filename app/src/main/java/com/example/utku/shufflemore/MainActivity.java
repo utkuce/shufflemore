@@ -30,12 +30,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         appData = new AppData(this);
+        spotifyPlaylist = new Playlist(this, appData);
         randomSongProvider = new RandomSongProvider(appData);
 
-        RecyclerView songList = findViewById(R.id.song_list);
-        trackRowAdapter = new TrackRowAdapter(RandomSongProvider.chosenSongs);
-        songList.setAdapter(trackRowAdapter);
-        songList.setLayoutManager(new LinearLayoutManager(this));
+        RecyclerView songListView = findViewById(R.id.song_list);
+        trackRowAdapter = new TrackRowAdapter(RandomSongProvider.chosenSongs, spotifyPlaylist);
+        songListView.setAdapter(trackRowAdapter);
+        songListView.setLayoutManager(new LinearLayoutManager(this));
 
         receiver = new BroadcastReceiver() {
 

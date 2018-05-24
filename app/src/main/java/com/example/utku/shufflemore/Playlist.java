@@ -36,7 +36,7 @@ class Playlist {
             create();
     }
 
-    private void create() {
+    void create() {
 
         String url = String.format("https://api.spotify.com/v1/users/%s/playlists", AppData.userId);
         SyncHttpClient client = new SyncHttpClient();
@@ -84,7 +84,7 @@ class Playlist {
     }
 
     private boolean alreadyExists = false;
-    private boolean alreadyExists() {
+    boolean alreadyExists() {
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -174,7 +174,8 @@ class Playlist {
 
     }
 
-    void removeTrack(String uri) {
+    boolean removeSuccess = false;
+    boolean removeTrack(String uri) {
 
         String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", AppData.userId, id);
 
@@ -206,17 +207,20 @@ class Playlist {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
-                System.out.println("New track added to playlist");
+                removeSuccess = true;
+                System.out.println("Track removed from playlist");
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject res) {
 
-                Toast.makeText(context, statusCode + " Playlist not created", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, statusCode + " Track not removed", Toast.LENGTH_LONG).show();
                 System.out.println(statusCode + " res: " + res);
             }
 
         });
+
+        return removeSuccess;
     }
 
     private ArrayList<RandomSongProvider.Song> songList = new ArrayList<>();
