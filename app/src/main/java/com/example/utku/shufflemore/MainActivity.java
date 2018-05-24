@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void playButton(View v) {
 
-        spotifyPlaylist.startPlayback(this, appData);
+        spotifyPlaylist.startPlayback();
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
             protected RandomSongProvider.Song doInBackground (Void... v) {
 
                 RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
-                spotifyPlaylist.addTrack(context, appData, newSong.uri);
+                spotifyPlaylist.addTrack(newSong.uri);
                 return newSong;
             }
 

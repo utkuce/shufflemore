@@ -24,15 +24,21 @@ class Playlist {
     static final String name = ".shufflemore";
     static String id;
 
+    private Context context;
+    private AppData appData;
+
     Playlist(final Context context, AppData appData) {
 
-        if (!alreadyExists(appData))
-            create(context, appData);
+        this.context = context;
+        this.appData = appData;
+
+        if (!alreadyExists())
+            create();
     }
 
-    private void create(final Context context, AppData appData) {
+    private void create() {
 
-        String url = String.format("https://api.spotify.com/v1/users/%s/playlists", appData.userId);
+        String url = String.format("https://api.spotify.com/v1/users/%s/playlists", AppData.userId);
         SyncHttpClient client = new SyncHttpClient();
         client.addHeader("Authorization", "Bearer " + appData.getAccessToken());
 
@@ -78,7 +84,7 @@ class Playlist {
     }
 
     private boolean alreadyExists = false;
-    private boolean alreadyExists(final AppData appData) {
+    private boolean alreadyExists() {
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -121,9 +127,9 @@ class Playlist {
         return alreadyExists;
     }
 
-    void addTrack(final Context context, AppData appData, String uri) {
+    void addTrack(String uri) {
 
-        String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", appData.userId, id);
+        String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", AppData.userId, id);
 
         SyncHttpClient client = new SyncHttpClient();
         client.addHeader("Authorization", "Bearer " + appData.getAccessToken());
@@ -160,7 +166,7 @@ class Playlist {
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject res) {
 
-                //Toast.makeText(context, statusCode + " Playlist not created", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, statusCode + " Playlist not created", Toast.LENGTH_LONG).show();
                 System.out.println(statusCode + " res: " + res);
             }
 
@@ -168,11 +174,56 @@ class Playlist {
 
     }
 
+    void removeTrack(String uri) {
+
+        String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", AppData.userId, id);
+
+        SyncHttpClient client = new SyncHttpClient();
+        client.addHeader("Authorization", "Bearer " + appData.getAccessToken());
+
+        JSONObject jsonParams = new JSONObject();
+        StringEntity data = null;
+
+        try {
+
+            JSONArray tracks = new JSONArray();
+            tracks.put(new JSONObject().put("uri", uri));
+            jsonParams.put("tracks", tracks);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            data = new StringEntity(jsonParams.toString());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        client.delete(context, url, data, "application/json", new JsonHttpResponseHandler() {
+
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+                System.out.println("New track added to playlist");
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject res) {
+
+                Toast.makeText(context, statusCode + " Playlist not created", Toast.LENGTH_LONG).show();
+                System.out.println(statusCode + " res: " + res);
+            }
+
+        });
+    }
+
     private ArrayList<RandomSongProvider.Song> songList = new ArrayList<>();
-    ArrayList<RandomSongProvider.Song> getTracks(AppData appData) {
+    ArrayList<RandomSongProvider.Song> getTracks() {
 
         songList.clear();
-        String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", appData.userId, id);
+        String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", AppData.userId, id);
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -190,6 +241,8 @@ class Playlist {
                         try {
 
                             JSONArray tracks = response.getJSONArray("items");
+                            System.out.println(tracks.length() + " songs in playlist:");
+
                             for (int i=0; i<tracks.length(); i++) {
 
                                 JSONObject track = tracks.getJSONObject(i).getJSONObject("track");
@@ -212,7 +265,7 @@ class Playlist {
         return songList;
     }
 
-    void startPlayback(final Context context, AppData appData) {
+    void startPlayback() {
 
         String url = "https://api.spotify.com/v1/me/player/play";
         AsyncHttpClient client = new AsyncHttpClient();
@@ -224,7 +277,7 @@ class Playlist {
 
         try {
 
-            jsonParams.put("context_uri", String.format("spotify:user:%s:playlist:%s", appData.userId, Playlist.id));
+            jsonParams.put("context_uri", String.format("spotify:user:%s:playlist:%s", AppData.userId, Playlist.id));
 
         } catch (JSONException e) {
             e.printStackTrace();
