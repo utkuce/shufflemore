@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -32,11 +33,13 @@ public class MainActivity extends AppCompatActivity {
         appData = new AppData(this);
         spotifyPlaylist = new Playlist(this, appData);
         randomSongProvider = new RandomSongProvider(appData);
+        trackRowAdapter = new TrackRowAdapter(RandomSongProvider.chosenSongs, spotifyPlaylist);
 
         RecyclerView songListView = findViewById(R.id.song_list);
-        trackRowAdapter = new TrackRowAdapter(RandomSongProvider.chosenSongs, spotifyPlaylist);
         songListView.setAdapter(trackRowAdapter);
         songListView.setLayoutManager(new LinearLayoutManager(this));
+        songListView.addItemDecoration(new DividerItemDecoration(songListView.getContext(),
+                DividerItemDecoration.VERTICAL));
 
         receiver = new BroadcastReceiver() {
 
