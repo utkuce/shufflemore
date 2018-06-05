@@ -2,7 +2,6 @@ package com.example.utku.shufflemore;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -10,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.example.utku.shufflemore.RandomSongProvider.Song;
 
@@ -19,6 +19,8 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
 
     private List<Song> chosenSongs;
     private Playlist spotifyPlaylist;
+
+    private int mExpandedPosition = -1;
 
     TrackRowAdapter(List<Song> chosenSongs, Playlist spotifyPlaylist) {
 
@@ -30,6 +32,7 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
 
         ImageView coverArt;
         TextView trackInfo;
+        LinearLayout rowButtons;
 
         ViewHolder(View itemView) {
 
@@ -37,37 +40,51 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
 
             coverArt = itemView.findViewById(R.id.cover_art);
             trackInfo = itemView.findViewById(R.id.track_info);
+            rowButtons = itemView.findViewById(R.id.row_buttons);
 
             itemView.setOnClickListener(this);
+
+            itemView.findViewById(R.id.delete_button).setOnClickListener(new View.OnClickListener() {
+
+                @SuppressLint("StaticFieldLeak")
+                @Override
+                public void onClick(View v) {
+
+                    final int index = getAdapterPosition();
+                    final Song clickedSong = chosenSongs.get(index);
+                    System.out.println("clicked " + clickedSong.name);
+
+                    new AsyncTask<Void , Void, Boolean>()
+                    {
+                        @Override
+                        protected Boolean doInBackground (Void... v)  {
+                            return spotifyPlaylist.removeTrack(clickedSong.uri);
+                        }
+
+                        @Override
+                        protected void onPostExecute(Boolean success){
+
+                            if (success) {
+
+                                chosenSongs.remove(index);
+                                notifyDataSetChanged();
+                            }
+                        }
+
+                    }.execute();
+                }
+            });
         }
 
-        @SuppressLint("StaticFieldLeak")
         @Override
         public void onClick(View v) {
 
+            final int position = getAdapterPosition();
+            final boolean isExpanded = position == mExpandedPosition;
 
-            final int index = getAdapterPosition();
-            final Song clickedSong = chosenSongs.get(index);
-            System.out.println("clicked " + clickedSong.name);
-
-            new AsyncTask<Void , Void, Boolean>()
-            {
-                @Override
-                protected Boolean doInBackground (Void... v)  {
-                    return spotifyPlaylist.removeTrack(clickedSong.uri);
-                }
-
-                @Override
-                protected void onPostExecute(Boolean success){
-
-                    if (success) {
-
-                        chosenSongs.remove(index);
-                        notifyDataSetChanged();
-                    }
-                }
-
-            }.execute();
+            rowButtons.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
+            mExpandedPosition = isExpanded ? -1: position;
+            notifyDataSetChanged();
         }
     }
 
@@ -84,7 +101,7 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(@NonNull TrackRowAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull TrackRowAdapter.ViewHolder holder, final int position) {
 
         Song song = chosenSongs.get(position);
 
@@ -98,5 +115,5 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
     @Override
     public int getItemCount() {
             return chosenSongs.size();
-        }
+    }
 }
