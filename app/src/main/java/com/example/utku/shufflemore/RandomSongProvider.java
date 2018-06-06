@@ -166,7 +166,7 @@ public class RandomSongProvider
             // cover
             JSONObject album = track.getJSONObject("album");
             JSONArray images = album.getJSONArray("images");
-            String coverUrl = images.getJSONObject(0).get("url").toString(); //TODO image quality option
+            String coverUrl = images.getJSONObject(2).get("url").toString(); //TODO image quality option
 
             song.cover = drawableFromUrl(coverUrl);
 
