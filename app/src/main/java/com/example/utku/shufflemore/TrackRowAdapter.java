@@ -20,22 +20,22 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
     private List<Song> chosenSongs;
     private Playlist spotifyPlaylist;
 
-    private int mExpandedPosition = -1;
-
     TrackRowAdapter(List<Song> chosenSongs, Playlist spotifyPlaylist) {
 
         this.chosenSongs = chosenSongs;
         this.spotifyPlaylist = spotifyPlaylist;
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    class ViewHolder extends RecyclerView.ViewHolder {
 
         ImageView coverArt;
         TextView trackInfo;
         LinearLayout rowButtons;
         ImageView expandIcon;
 
-        ViewHolder(View itemView) {
+        boolean expanded;
+
+        ViewHolder(final View itemView) {
 
             super(itemView);
 
@@ -44,7 +44,30 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
             rowButtons = itemView.findViewById(R.id.row_buttons);
             expandIcon = itemView.findViewById(R.id.expandIcon);
 
-            itemView.setOnClickListener(this);
+            expanded = false;
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+
+                    if (!expanded) {
+
+                        rowButtons.setVisibility(View.VISIBLE);
+                        expandIcon.setImageResource(R.drawable.baseline_expand_less_24);
+
+                    } else {
+
+                        rowButtons.setVisibility(View.GONE);
+                        expandIcon.setImageResource(R.drawable.baseline_expand_more_24);
+
+                    }
+
+                    expanded = !expanded;
+                    notifyDataSetChanged();
+                }
+
+            });
 
             itemView.findViewById(R.id.delete_button).setOnClickListener(new View.OnClickListener() {
 
@@ -76,24 +99,6 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
                     }.execute();
                 }
             });
-        }
-
-        @Override
-        public void onClick(View v) {
-
-            final int position = getAdapterPosition();
-            final boolean isExpanded = position == mExpandedPosition;
-
-            if (isExpanded) {
-                rowButtons.setVisibility(View.VISIBLE);
-                expandIcon.setImageResource(R.drawable.baseline_expand_less_24);
-            } else {
-                rowButtons.setVisibility(View.GONE);
-                expandIcon.setImageResource(R.drawable.baseline_expand_more_24);
-            }
-
-            mExpandedPosition = isExpanded ? -1: position;
-            notifyDataSetChanged();
         }
     }
 
