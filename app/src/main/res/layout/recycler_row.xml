@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -7,30 +8,44 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:minHeight="65dp">
+        android:layout_height="wrap_content">
 
         <ImageView
-            android:id="@+id/cover_art"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="5dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="@string/cover_art"
-            android:scaleType="fitCenter"
-            android:maxHeight="65dp"
-            android:maxWidth="65dp"/>
-
-        <TextView
-            android:id="@+id/track_info"
+            android:id="@+id/expandIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="" />
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            app:srcCompat="@drawable/baseline_expand_more_24" />
 
-    </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:minHeight="65dp">
+
+            <ImageView
+                android:id="@+id/cover_art"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="5dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/cover_art"
+                android:scaleType="fitCenter"
+                android:maxHeight="65dp"
+                android:maxWidth="65dp"/>
+
+            <TextView
+                android:id="@+id/track_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/row_buttons"

@@ -33,6 +33,7 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
         ImageView coverArt;
         TextView trackInfo;
         LinearLayout rowButtons;
+        ImageView expandIcon;
 
         ViewHolder(View itemView) {
 
@@ -41,6 +42,7 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
             coverArt = itemView.findViewById(R.id.cover_art);
             trackInfo = itemView.findViewById(R.id.track_info);
             rowButtons = itemView.findViewById(R.id.row_buttons);
+            expandIcon = itemView.findViewById(R.id.expandIcon);
 
             itemView.setOnClickListener(this);
 
@@ -82,7 +84,14 @@ public class TrackRowAdapter extends RecyclerView.Adapter<TrackRowAdapter.ViewHo
             final int position = getAdapterPosition();
             final boolean isExpanded = position == mExpandedPosition;
 
-            rowButtons.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
+            if (isExpanded) {
+                rowButtons.setVisibility(View.VISIBLE);
+                expandIcon.setImageResource(R.drawable.baseline_expand_less_24);
+            } else {
+                rowButtons.setVisibility(View.GONE);
+                expandIcon.setImageResource(R.drawable.baseline_expand_more_24);
+            }
+
             mExpandedPosition = isExpanded ? -1: position;
             notifyDataSetChanged();
         }
