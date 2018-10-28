@@ -112,6 +112,8 @@ public class AuthenticatedActivity extends MainActivity {
 
     public void authenticateUser() {
 
+        System.out.println("Authenticating user");
+
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(appData.CLIENT_ID,
                 AuthenticationResponse.Type.CODE, REDIRECT_URI);
         builder.setScopes(permissions);
@@ -180,7 +182,7 @@ public class AuthenticatedActivity extends MainActivity {
             final AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthenticationResponse.Type.CODE)
             {
-                //System.out.println("Response code: " + response.getCode());
+                System.out.println("Authentication response code: " + response.getCode());
                 new AsyncTask<Void,Void,Void>(){
 
                     @Override
@@ -190,21 +192,25 @@ public class AuthenticatedActivity extends MainActivity {
                     }
 
                 }.execute();
-            } else if (response.getType() == AuthenticationResponse.Type.ERROR) {
-                new AlertDialog.Builder(getApplicationContext())
-                        .setMessage(response.getError())
-                        .setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
+            } else if (response.getType().equals(AuthenticationResponse.Type.ERROR)) {
 
+                System.out.println("Spotify Authentication Error: " + response.getError());
+                new AlertDialog.Builder(AuthenticatedActivity.this)
+                        .setTitle("Spotify Authentication Error")
+                        .setMessage(response.getError())
+                        .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialogInterface) {
+                                finish();
                             }
                         }).create().show();
-                finish();
             }
         }
     }
 
     private void retrieveRefreshToken(String code) {
+
+        System.out.println("Retrieving refresh token");
 
         final Context context = this;
         runOnUiThread(new Runnable() {
@@ -230,6 +236,7 @@ public class AuthenticatedActivity extends MainActivity {
             @Override
             public void onSuccess(int i, Header[] headers, JSONObject response) {
 
+                System.out.println("Refresh token response (success): " + response);
                 try {
 
                     appData.setRefreshToken(response.get("refresh_token").toString());
@@ -255,7 +262,7 @@ public class AuthenticatedActivity extends MainActivity {
             @Override
             public void onFailure(int statusCode, Header[] headers, String res, Throwable t) {
 
-                System.out.println(res);
+                System.out.println("Refresh token response (failed): " + res);
                 new AlertDialog.Builder(getApplication())
                         .setTitle("ShuffleMore")
                         .setMessage("Setting refresh token failed")
