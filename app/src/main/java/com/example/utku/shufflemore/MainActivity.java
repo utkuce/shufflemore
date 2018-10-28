@@ -31,6 +31,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         appData = new AppData(this);
+
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    protected void startJob() {
+
         spotifyPlaylist = new Playlist(this, appData);
         randomSongProvider = new RandomSongProvider(appData);
         trackRowAdapter = new TrackRowAdapter(RandomSongProvider.chosenSongs, spotifyPlaylist);
@@ -56,6 +62,28 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction("shufflemore.changenext");
         registerReceiver(receiver, filter);
+
+        if (RandomSongProvider.chosenSongs.isEmpty())
+            new AsyncTask<Void , Void, Void>()
+            {
+                @Override
+                protected Void doInBackground (Void... v)  {
+
+                    if (!spotifyPlaylist.alreadyExists())
+                        spotifyPlaylist.create();
+
+                    RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks());
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(Void v){
+
+                    trackRowAdapter.notifyDataSetChanged();
+                    startService(new Intent(MainActivity.this, PlayBackReceiverService.class));
+                }
+
+            }.execute();
     }
 
     @Override

@@ -52,6 +52,7 @@ public class AuthenticatedActivity extends MainActivity {
 
         super.onCreate(savedInstanceState);
 
+        System.out.println("Checking authentication");
         if (appData.getRefreshToken() == null)
             authenticateUser();
         else
@@ -60,6 +61,8 @@ public class AuthenticatedActivity extends MainActivity {
 
     @SuppressLint("StaticFieldLeak")
     private void userIsAuthenticated() {
+
+        System.out.println("User is authenticated");
 
         final Context context = this;
         new AsyncTask<Void , Void, Void>() {
@@ -75,39 +78,21 @@ public class AuthenticatedActivity extends MainActivity {
             @Override
             protected void onPostExecute(Void v){
 
-                postAuthentication(context);
+                postAuthentication();
             }
 
         }.execute();
     }
 
     @SuppressLint("StaticFieldLeak")
-    private void postAuthentication(final Context context) {
+    private void postAuthentication() {
+
+        System.out.println("Authentication complete");
 
         String connected_message = "Connected as " + "<b>" + AppData.userId + "</b>";
         ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
 
-        if (RandomSongProvider.chosenSongs.isEmpty())
-            new AsyncTask<Void , Void, Void>()
-            {
-                @Override
-                protected Void doInBackground (Void... v)  {
-
-                    if (!spotifyPlaylist.alreadyExists())
-                        spotifyPlaylist.create();
-
-                    RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks());
-                    return null;
-                }
-
-                @Override
-                protected void onPostExecute(Void v){
-
-                    trackRowAdapter.notifyDataSetChanged();
-                    startService(new Intent(context, PlayBackReceiverService.class));
-                }
-
-            }.execute();
+        startJob();
     }
 
     public void authenticateUser() {
@@ -122,6 +107,8 @@ public class AuthenticatedActivity extends MainActivity {
     }
 
     private void setUserInfo() {
+
+        System.out.println("Setting user info");
 
         final Context context = this;
         runOnUiThread(new Runnable() {
