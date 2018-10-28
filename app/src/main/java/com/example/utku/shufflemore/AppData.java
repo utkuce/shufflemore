@@ -49,13 +49,20 @@ public class AppData {
     }
 
     void setAccessToken(String token) {
+
+        System.out.println("Saving access token for session");
         accessToken = token;
     }
 
     String getAccessToken() {
 
+        System.out.println("Reading access token");
+
         if (accessToken == null)
-          retrieveAccessToken();
+        {
+            System.out.println("Access token not found");
+            retrieveAccessToken();
+        }
 
         return accessToken;
 
@@ -67,6 +74,8 @@ public class AppData {
 
     String getRefreshToken()
     {
+        System.out.println("Reading refresh token");
+
         if (refreshToken == null) {
 
             File file  = new File(context.getFilesDir(), "refresh_token.dat");
@@ -171,7 +180,6 @@ public class AppData {
             public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
 
                 System.out.println("Http request failed: " + statusCode);
-                System.out.println(response);
 
                 //((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
                 //      .notify(0, MainActivity.getNotification(context).setContentText("Connection problem").build());
