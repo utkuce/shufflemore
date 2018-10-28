@@ -78,7 +78,7 @@ public class AppData {
 
             } catch (FileNotFoundException e) {
 
-                //Toast.makeText(context, "Refresh token not found", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Refresh token not found", Toast.LENGTH_LONG).show();
                 System.out.println("File not found: " + file.getPath());
                 return null;
 
@@ -138,6 +138,8 @@ public class AppData {
 
     private void retrieveAccessToken()
     {
+        System.out.println("Retrieving access token");
+
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
 
