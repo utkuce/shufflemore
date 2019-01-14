@@ -296,6 +296,51 @@ public class AuthenticatedActivity extends MainActivity {
 
                     System.out.println("playnext received");
 
+                    new AsyncTask<Void , Void, RandomSongProvider.Song>()
+                    {
+                        @Override
+                        protected RandomSongProvider.Song doInBackground (Void... v)  {
+
+                            final RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
+                            return newSong;
+                        }
+
+                        @Override
+                        protected void onPostExecute(final RandomSongProvider.Song newSong){
+
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+
+                                    spotifyPlaylist.removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
+                                    RandomSongProvider.chosenSongs.remove(0);
+
+                                    spotifyPlaylist.addTrack(newSong.uri);
+                                    RandomSongProvider.chosenSongs.add(newSong);
+
+
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
+                                            setNextSongUI(newSong);
+                                        }
+                                    });
+                                }
+                            }).start();
+                        }
+
+                    }.execute();
+
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+
+
+
+
+                        }
+                    }).start();
                 }
             }
         };
