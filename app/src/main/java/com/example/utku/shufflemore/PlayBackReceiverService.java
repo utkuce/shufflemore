@@ -57,7 +57,12 @@ public class PlayBackReceiverService extends Service {
 
                 //TODO save playlist position to return back later
                 System.out.println("Metadata changed");
-                //sendBroadcast(new Intent("shufflemore.playnext"));
+
+                if (intent.getStringExtra("id").equals(RandomSongProvider.chosenSongs.get(1).uri)) {
+
+                    System.out.println("Random song finished, adjusting playlist");
+                    sendBroadcast(new Intent("shufflemore.playnext"));
+                }
 
             } else {
                 Toast.makeText(context, "Intent action is empty", Toast.LENGTH_LONG).show();
