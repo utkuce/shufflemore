@@ -10,9 +10,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.text.TextUtils;
 import android.widget.TextView;
@@ -43,7 +40,7 @@ public class AuthenticatedActivity extends MainActivity {
 
     private ProgressDialog authDialog;
 
-    final String[] permissions = new String[]{
+    final String[] spotifyApiPermissions = new String[]{
 
             "user-library-read",
             "playlist-modify-private",
@@ -115,7 +112,7 @@ public class AuthenticatedActivity extends MainActivity {
 
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(appData.CLIENT_ID,
                 AuthenticationResponse.Type.CODE, REDIRECT_URI);
-        builder.setScopes(permissions);
+        builder.setScopes(spotifyApiPermissions);
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
     }
@@ -229,7 +226,7 @@ public class AuthenticatedActivity extends MainActivity {
 
         params.put("grant_type", "authorization_code");
         params.put("code", code);
-        params.put("scope", TextUtils.join(" ", permissions));
+        params.put("scope", TextUtils.join(" ", spotifyApiPermissions));
         params.put("redirect_uri", REDIRECT_URI);
 
         client.post("https://accounts.spotify.com/api/token", params, new JsonHttpResponseHandler() {
@@ -288,30 +285,26 @@ public class AuthenticatedActivity extends MainActivity {
 
         spotifyPlaylist = new Playlist(this, appData);
         randomSongProvider = new RandomSongProvider(appData);
-        trackRowAdapter = new TrackRowAdapter(RandomSongProvider.chosenSongs, spotifyPlaylist);
-
-        RecyclerView songListView = findViewById(R.id.song_list);
-        songListView.setAdapter(trackRowAdapter);
-        songListView.setLayoutManager(new LinearLayoutManager(this));
-        songListView.addItemDecoration(new DividerItemDecoration(songListView.getContext(),
-                DividerItemDecoration.VERTICAL));
 
         receiver = new BroadcastReceiver() {
 
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(final Context context, Intent intent) {
                 String action = intent.getAction();
-                if (action.equals("shufflemore.changenext")) {
-                    System.out.println("changenext received");
-                    changeNextSong();
+
+                if (action.equals("shufflemore.playnext")) {
+
+                    System.out.println("playnext received");
+
                 }
             }
         };
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction("shufflemore.changenext");
+        filter.addAction("shufflemore.playnext");
         registerReceiver(receiver, filter);
 
+        final Context context = this;
         if (RandomSongProvider.chosenSongs.isEmpty()) {
 
             new AsyncTask<Void , Void, Void>()
@@ -323,13 +316,22 @@ public class AuthenticatedActivity extends MainActivity {
                         spotifyPlaylist.create();
 
                     RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks());
+                    while (RandomSongProvider.chosenSongs.size() < 2) {
+
+                        RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
+                        RandomSongProvider.chosenSongs.add(newSong);
+                        spotifyPlaylist.addTrack(newSong.uri);
+                    }
+
                     return null;
                 }
 
                 @Override
                 protected void onPostExecute(Void v){
 
-                    trackRowAdapter.notifyDataSetChanged();
+                    setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
+                    setNextSongUI(RandomSongProvider.chosenSongs.get(1));
+
                     startService(new Intent(AuthenticatedActivity.this, PlayBackReceiverService.class));
                 }
 

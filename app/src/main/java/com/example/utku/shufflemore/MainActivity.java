@@ -8,6 +8,8 @@ import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -15,7 +17,6 @@ public class MainActivity extends AppCompatActivity {
     AppData appData;
 
     Playlist spotifyPlaylist;
-    TrackRowAdapter trackRowAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
             protected void onPostExecute(RandomSongProvider.Song newSong){
 
                 RandomSongProvider.chosenSongs.add(newSong);
-                trackRowAdapter.notifyItemInserted(RandomSongProvider.chosenSongs.size()-1);
             }
 
         }.execute();
@@ -70,19 +70,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
 
+                spotifyPlaylist.removeTrack(RandomSongProvider.chosenSongs.get(1).uri);
+
                 final RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
-                if (RandomSongProvider.chosenSongs.isEmpty())
-                    RandomSongProvider.chosenSongs.add(newSong);
-                else
-                    RandomSongProvider.chosenSongs.set(0, newSong);
+                RandomSongProvider.chosenSongs.set(1, newSong);
+                spotifyPlaylist.addTrack(newSong.uri);
 
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
-                        trackRowAdapter.notifyDataSetChanged();
-
                         if (newSong != null) {
+
+                            setNextSongUI(RandomSongProvider.chosenSongs.get(1));
 
                             ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
                                     .notify(0, PlayBackReceiverService.getNotification(context)
@@ -95,5 +95,23 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         }).start();
+    }
+
+    void setCurrentSongUI(RandomSongProvider.Song song) {
+
+        ((ImageView)findViewById(R.id.cover_art_current)).setImageBitmap(song.cover);
+        ((TextView)findViewById(R.id.track_info_current)).setText(String.format("%s\n%s", song.name, song.artist));
+
+    }
+
+    void setNextSongUI(RandomSongProvider.Song song) {
+
+        ((ImageView)findViewById(R.id.cover_art_next)).setImageBitmap(song.cover);
+        ((TextView)findViewById(R.id.track_info_next)).setText(String.format("%s\n%s", song.name, song.artist));
+
+    }
+
+    public void shuffleButton(View view) {
+        changeNextSong();
     }
 }
