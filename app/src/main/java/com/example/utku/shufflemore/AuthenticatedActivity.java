@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -103,6 +104,7 @@ public class AuthenticatedActivity extends MainActivity {
         String connected_message = "Connected as " + "<b>" + AppData.userId + "</b>";
         ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
 
+        findViewById(R.id.gui).setVisibility(View.VISIBLE);
         startJob();
     }
 
@@ -159,7 +161,12 @@ public class AuthenticatedActivity extends MainActivity {
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
 
                         System.out.println(response);
-                        Toast.makeText(getApplicationContext(), "Couldn't set user id", Toast.LENGTH_LONG).show();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "Couldn't set user id", Toast.LENGTH_LONG).show();
+                            }
+                        });
                     }
 
                     @Override

@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
         appData = new AppData(this);
 
+        findViewById(R.id.gui).setVisibility(View.INVISIBLE);
     }
 
     @Override
