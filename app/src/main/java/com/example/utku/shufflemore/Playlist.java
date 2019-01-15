@@ -1,6 +1,8 @@
 package com.example.utku.shufflemore;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -174,7 +176,7 @@ class Playlist {
 
     }
 
-    boolean removeSuccess = false;
+    private boolean removeSuccess = false;
     boolean removeTrack(String uri) {
 
         String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", AppData.userId, id);
@@ -303,7 +305,24 @@ class Playlist {
             @Override
             public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
 
-                Toast.makeText(context, "Playlist playback error: " + i, Toast.LENGTH_SHORT).show();
+                try {
+
+                    JSONObject error = new JSONObject(new String(bytes)).getJSONObject("error");
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+                    builder.setTitle("Playlist playback error: " + i )
+                            .setMessage(error.getString("message") + System.lineSeparator() + error.getString("reason"))
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // continue
+                                }
+                            })
+                            .show();
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
                 System.out.println("Playlist playback error: " + i + new String(bytes));
             }
         });
