@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.text.Html;
 import android.widget.Toast;
 
@@ -24,17 +23,17 @@ import java.util.Vector;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public class RandomSongProvider
+class RandomSongProvider
 {
     private static int totalTracks = -1;
-    public static ArrayList<Song> chosenSongs = new ArrayList<>();
+    static ArrayList<Song> chosenSongs = new ArrayList<>();
 
     private AppData appData;
     RandomSongProvider(AppData appData) {
         this.appData = appData;
     }
 
-    public void addToHistory(Context context, String uri)
+    private void addToHistory(Context context, String uri)
     {
         Vector<String> history = AppData.getHistory(context);
         if (history != null) {
@@ -47,14 +46,16 @@ public class RandomSongProvider
             Toast.makeText(context, "Cant read song history", Toast.LENGTH_LONG).show();
     }
 
-    public static class Song {
+    static class Song {
         String uri, name, artist;
         Bitmap cover;
         boolean playable;
     }
 
-    public Song getNewSong(Context context)
+    Song getNewSong(Context context)
     {
+        System.out.println("Choosing new random song");
+
         Song song = null;
 
         if ((totalTracks = (totalTracks == -1) ? getTotalTracks() : totalTracks) != -1)
@@ -84,13 +85,19 @@ public class RandomSongProvider
             } while (history.contains(song.uri) && song.uri == null);
         }
 
-        if (song!= null && !song.playable) {
+        if (song!= null) {
 
-            System.out.println(song.name + " is not playable, getting another song");
-            song = getNewSong(context);
+            if (!song.playable) {
+
+                System.out.println(song.name + " is not playable, getting another song");
+                song = getNewSong(context);
+
+            } else {
+                System.out.println("Chosen song: " + song.name);
+                addToHistory(context, song.uri);
+            }
         }
 
-        System.out.println("Chosen song: " + song.name);
         return song;
     }
 
@@ -125,7 +132,7 @@ public class RandomSongProvider
 
             JSONObject jsonObject = new JSONObject(response.toString());
             totalTracks = Integer.parseInt(jsonObject.get("total").toString());
-            System.out.println("Total tracks: " + totalTracks);
+            //System.out.printlnprintln("Total tracks: " + totalTracks);
             JSONArray itemsArray = jsonObject.getJSONArray("items");
 
             JSONObject saved_track = new JSONObject(itemsArray.get(0).toString());
