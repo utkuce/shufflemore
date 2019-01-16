@@ -126,12 +126,7 @@ public class AuthenticatedActivity extends MainActivity {
         System.out.println("Setting user info");
 
         final Context context = this;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                authDialog = ProgressDialog.show(context, "","Retrieving user id...",true);
-            }
-        });
+        runOnUiThread(() -> authDialog = ProgressDialog.show(context, "","Retrieving user id...",true));
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -163,12 +158,7 @@ public class AuthenticatedActivity extends MainActivity {
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
 
                         System.out.println(response);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(), "Couldn't set user id", Toast.LENGTH_LONG).show();
-                            }
-                        });
+                        runOnUiThread(() -> Toast.makeText(getApplicationContext(), "Couldn't set user id", Toast.LENGTH_LONG).show());
                     }
 
                     @Override
@@ -205,12 +195,7 @@ public class AuthenticatedActivity extends MainActivity {
                 new AlertDialog.Builder(AuthenticatedActivity.this)
                         .setTitle("Spotify Authentication Error")
                         .setMessage(response.getError())
-                        .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                            @Override
-                            public void onDismiss(DialogInterface dialogInterface) {
-                                finish();
-                            }
-                        }).create().show();
+                        .setOnDismissListener(dialogInterface -> finish()).create().show();
             }
         }
     }
@@ -220,12 +205,7 @@ public class AuthenticatedActivity extends MainActivity {
         System.out.println("Retrieving refresh token");
 
         final Context context = this;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                authDialog = ProgressDialog.show(context, "","Retrieving refresh token...",true);
-            }
-        });
+        runOnUiThread(() -> authDialog = ProgressDialog.show(context, "","Retrieving refresh token...",true));
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -273,11 +253,8 @@ public class AuthenticatedActivity extends MainActivity {
                 new AlertDialog.Builder(getApplication())
                         .setTitle("ShuffleMore")
                         .setMessage("Setting refresh token failed")
-                        .setNeutralButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                        .setNeutralButton("OK", (dialog, which) -> {
 
-                            }
                         })
                         .show();
             }
@@ -316,9 +293,7 @@ public class AuthenticatedActivity extends MainActivity {
                         @Override
                         protected void onPostExecute(final RandomSongProvider.Song newSong){
 
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
+                            new Thread(() -> {
 
                                 boolean removed = spotifyPlaylist.removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
                                 if (removed)
@@ -328,14 +303,11 @@ public class AuthenticatedActivity extends MainActivity {
                                 RandomSongProvider.chosenSongs.add(newSong);
 
 
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
-                                            setNextSongUI(newSong);
-                                        }
-                                    });
-                                }
+                                runOnUiThread(() -> {
+                                    setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
+                                    setNextSongUI(newSong);
+                                });
+
                             }).start();
                         }
 

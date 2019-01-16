@@ -29,7 +29,7 @@ public class AppData {
 
     private Context context;
 
-    String CLIENT_ID;
+    static String CLIENT_ID;
     String CLIENT_SECRET;
 
     private String refreshToken;
@@ -112,6 +112,8 @@ public class AppData {
             Vector<String> h = (Vector<String>) in.readObject();
             in.close();
             fileIn.close();
+
+            //System.out.println("History: " + h);
             return h;
 
         }catch(IOException i) {
@@ -187,11 +189,8 @@ public class AppData {
                 System.out.println("Failed to retrieve access token");
                 new AlertDialog.Builder(context)
                         .setMessage("Failed to retrieve access token")
-                        .setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
+                        .setPositiveButton("ok", (dialog, which) -> {
 
-                            }
                         }).create().show();
             }
         });

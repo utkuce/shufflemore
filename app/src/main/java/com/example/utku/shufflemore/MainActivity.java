@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
 
         super.onDestroy();
-        stopService(new Intent(this, PlayBackReceiverService.class));
+        //stopService(new Intent(this, PlayBackReceiverService.class));
     }
 
     public void playButton(View v) {
@@ -67,34 +67,25 @@ public class MainActivity extends AppCompatActivity {
     public void changeNextSong() {
 
         final Context context = this;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+        new Thread(() -> {
 
-                spotifyPlaylist.removeTrack(RandomSongProvider.chosenSongs.get(1).uri);
+            spotifyPlaylist.removeTrack(RandomSongProvider.chosenSongs.get(1).uri);
 
-                final RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
-                RandomSongProvider.chosenSongs.set(1, newSong);
-                spotifyPlaylist.addTrack(newSong.uri);
+            final RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
+            RandomSongProvider.chosenSongs.set(1, newSong);
+            spotifyPlaylist.addTrack(newSong.uri);
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+            runOnUiThread(() -> {
 
-                        if (newSong != null) {
+                setNextSongUI(RandomSongProvider.chosenSongs.get(1));
 
-                            setNextSongUI(RandomSongProvider.chosenSongs.get(1));
-
-                            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
-                                    .notify(0, PlayBackReceiverService.getNotification(context)
-                                            .setContentTitle(newSong.name)
-                                            .setContentText(newSong.artist)
-                                            .setLargeIcon(newSong.cover)
-                                            .build());
-                        }
-                    }
-                });
-            }
+             /*   ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
+                        .notify(0, PlayBackReceiverService.getNotification(context)
+                                .setContentTitle(newSong.name)
+                                .setContentText(newSong.artist)
+                                .setLargeIcon(newSong.cover)
+                                .build());*/
+            });
         }).start();
     }
 
