@@ -1,15 +1,16 @@
 package com.example.utku.shufflemore;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
+import android.content.Intent;
+import android.util.Log;
 import android.widget.Toast;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,16 +24,71 @@ import cz.msebera.android.httpclient.entity.StringEntity;
 
 class Playlist {
 
-    static final String name = ".shufflemore";
+    private static final String name = ".shufflemore";
     static String id;
 
     private Context context;
     private AppData appData;
 
+    static SpotifyAppRemote mSpotifyAppRemote;
+    private boolean remoteConnected = false;
+
     Playlist(final Context context, AppData appData) {
 
         this.context = context;
         this.appData = appData;
+
+        ConnectionParams connectionParams =
+                new ConnectionParams.Builder(AppData.CLIENT_ID)
+                        .setRedirectUri(AuthenticatedActivity.REDIRECT_URI)
+                        .showAuthView(true)
+                        .build();
+
+        SpotifyAppRemote.connect(context, connectionParams,
+                new Connector.ConnectionListener() {
+
+                    @Override
+                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                        mSpotifyAppRemote = spotifyAppRemote;
+                        System.out.println("Spotify App Remote connected");
+
+                        remoteConnected = true;
+
+                        mSpotifyAppRemote.getPlayerApi()
+                                .subscribeToPlayerState()
+                                .setEventCallback(playerState -> {
+
+                                    System.out.println("Player state event callback: " + playerState.track.name  + ", " + playerState.playbackPosition);
+
+                                    String currentSong = playerState.track.uri;
+                                    int lastIndex = RandomSongProvider.chosenSongs.size()-1;
+                                    String lastInPlaylist = RandomSongProvider.chosenSongs.get(lastIndex).uri;
+
+                                    if (currentSong.equals(lastInPlaylist)) {
+
+                                        System.out.println("Playlist exhausted, getting new list");
+                                        context.sendBroadcast(new Intent("shufflemore.playnext"));
+                                        // TODO: queue new playlist
+                                    }
+
+/*
+                                    if (lastPlayedSongUri.equals(RandomSongProvider.chosenSongs.get(0).uri)) {
+                                        if (playerState.track.uri.equals(RandomSongProvider.chosenSongs.get(1).uri)) {
+                                            System.out.println("Random Song finished, adjusting playlist");
+                                            context.sendBroadcast(new Intent("shufflemore.playnext"));
+                                        }
+                                    }
+*/
+                                });
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        Log.e("MainActivity", throwable.getMessage(), throwable);
+
+                        // Something went wrong when attempting to connect! Handle errors here
+                    }
+                });
 
         if (!alreadyExists())
             create();
@@ -122,7 +178,7 @@ class Playlist {
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
-                        System.out.println(response);
+                        System.out.println("Failure (response): " + response);
                     }
                 });
 
@@ -130,6 +186,9 @@ class Playlist {
     }
 
     void addTrack(String uri) {
+
+        //if (RandomSongProvider.chosenSongs.size() > 0)
+        //    mSpotifyAppRemote.getPlayerApi().queue(uri);
 
         String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", AppData.userId, id);
 
@@ -173,7 +232,6 @@ class Playlist {
             }
 
         });
-
     }
 
     private boolean removeSuccess = false;
@@ -247,7 +305,7 @@ class Playlist {
                         try {
 
                             JSONArray tracks = response.getJSONArray("items");
-                            System.out.println(tracks.length() + " songs in playlist:");
+                            System.out.println(tracks.length() + " songs currently in playlist:");
 
                             for (int i=0; i<tracks.length(); i++) {
 
@@ -264,7 +322,7 @@ class Playlist {
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
-                        System.out.println(response);
+                        System.out.println("Response (failure): " + response);
                     }
                 });
 
@@ -273,58 +331,10 @@ class Playlist {
 
     void startPlayback() {
 
-        String url = "https://api.spotify.com/v1/me/player/play";
-        AsyncHttpClient client = new AsyncHttpClient();
+        System.out.println("Starting playback");
+        if (remoteConnected)
+            mSpotifyAppRemote.getPlayerApi().play(String.format("spotify:user:%s:playlist:%s", AppData.userId, Playlist.id));
 
-        client.addHeader("Authorization", "Bearer " + appData.getAccessToken());
-
-        JSONObject jsonParams = new JSONObject();
-        StringEntity data = null;
-
-        try {
-
-            jsonParams.put("context_uri", String.format("spotify:user:%s:playlist:%s", AppData.userId, Playlist.id));
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            data = new StringEntity(jsonParams.toString());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        client.put(context, url, data, "application/json", new AsyncHttpResponseHandler() {
-
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                System.out.println("Playlist playback started");
-            }
-
-            @Override
-            public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
-
-                try {
-
-                    JSONObject error = new JSONObject(new String(bytes)).getJSONObject("error");
-                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-
-                    builder.setTitle("Playlist playback error: " + i )
-                            .setMessage(error.getString("message") + System.lineSeparator() + error.getString("reason"))
-                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    // continue
-                                }
-                            })
-                            .show();
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-                System.out.println("Playlist playback error: " + i + new String(bytes));
-            }
-        });
+        //TODO: else error
     }
 }

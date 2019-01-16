@@ -36,7 +36,7 @@ import cz.msebera.android.httpclient.Header;
 
 public class AuthenticatedActivity extends MainActivity {
 
-    private final String REDIRECT_URI = "shufflemore://callback";
+    static final String REDIRECT_URI = "shufflemore://callback";
     private final int REQUEST_CODE = 1234;
 
     private ProgressDialog authDialog;
@@ -47,7 +47,9 @@ public class AuthenticatedActivity extends MainActivity {
             "playlist-modify-private",
             "playlist-read-private",
             "user-modify-playback-state",
-            "user-read-private"
+            "user-read-private",
+
+            "app-remote-control"
     };
 
     private BroadcastReceiver receiver;
@@ -308,8 +310,7 @@ public class AuthenticatedActivity extends MainActivity {
                         @Override
                         protected RandomSongProvider.Song doInBackground (Void... v)  {
 
-                            final RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
-                            return newSong;
+                            return randomSongProvider.getNewSong(context);
                         }
 
                         @Override
@@ -319,11 +320,12 @@ public class AuthenticatedActivity extends MainActivity {
                                 @Override
                                 public void run() {
 
-                                    spotifyPlaylist.removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
+                                boolean removed = spotifyPlaylist.removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
+                                if (removed)
                                     RandomSongProvider.chosenSongs.remove(0);
 
-                                    spotifyPlaylist.addTrack(newSong.uri);
-                                    RandomSongProvider.chosenSongs.add(newSong);
+                                spotifyPlaylist.addTrack(newSong.uri); // TODO: add success check
+                                RandomSongProvider.chosenSongs.add(newSong);
 
 
                                     runOnUiThread(new Runnable() {
@@ -338,16 +340,6 @@ public class AuthenticatedActivity extends MainActivity {
                         }
 
                     }.execute();
-
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-
-
-
-
-                        }
-                    }).start();
                 }
             }
         };
@@ -367,6 +359,7 @@ public class AuthenticatedActivity extends MainActivity {
                     if (!spotifyPlaylist.alreadyExists())
                         spotifyPlaylist.create();
 
+                    RandomSongProvider.chosenSongs.clear();
                     RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks());
                     while (RandomSongProvider.chosenSongs.size() < 2) {
 
@@ -384,7 +377,7 @@ public class AuthenticatedActivity extends MainActivity {
                     setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
                     setNextSongUI(RandomSongProvider.chosenSongs.get(1));
 
-                    startService(new Intent(AuthenticatedActivity.this, PlayBackReceiverService.class));
+                    //startService(new Intent(AuthenticatedActivity.this, PlayBackReceiverService.class));
                 }
 
             }.execute();
