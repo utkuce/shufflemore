@@ -24,18 +24,22 @@ import java.util.ArrayList;
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.entity.StringEntity;
 
+import com.example.utku.shufflemore.RandomSongProvider.Song;
+
 class Playlist {
 
     private static final String name = ".shufflemore";
-    static String id;
+    private String id;
 
     private Context context;
     private AppData appData;
 
-    private static SpotifyAppRemote mSpotifyAppRemote;
+    private SpotifyAppRemote mSpotifyAppRemote;
     private boolean remoteConnected = false;
 
     private RandomSongProvider randomSongProvider;
+
+    private String lastCallback = "";
 
     Playlist(final Context context, AppData appData) {
 
@@ -65,48 +69,49 @@ class Playlist {
                                 .subscribeToPlayerState()
                                 .setEventCallback(playerState -> {
 
-                                    Log.v("sm_PLAYLIST","Player state event callback: " + playerState.track.name  + ", " + playerState.playbackPosition);
+                                    Log.v("sm_PLAYLIST","Player state event callback received: "
+                                            + playerState.track.name  + ", " + playerState.playbackPosition);
 
                                     String currentSong = playerState.track.uri;
                                     int lastIndex = RandomSongProvider.chosenSongs.size()-1;
                                     String lastInPlaylist = RandomSongProvider.chosenSongs.get(lastIndex).uri;
 
-                                    if (currentSong.equals(lastInPlaylist)) {
-                                        if (!playerState.isPaused) {
-                                            Log.v("sm_PLAYLIST","Song ended, adjusting next up");
 
+                                    // if not getting repeat callbacks for the same song
+                                    if (!currentSong.equals(lastCallback) && currentSong.equals(lastInPlaylist)) {
 
-                                            new AsyncTask<Void , Void, RandomSongProvider.Song>()
-                                            {
-                                                @Override
-                                                protected RandomSongProvider.Song doInBackground (Void... v)  {
+                                        Log.v("sm_PLAYLIST","Song ended, adjusting next up");
 
-                                                    pausePlayback();
-                                                    return randomSongProvider.getNewSong(context);
-                                                }
+                                        new AsyncTask<Void , Void, Song>()
+                                        {
+                                            @Override
+                                            protected Song doInBackground (Void... v)  {
 
-                                                @Override
-                                                protected void onPostExecute(final RandomSongProvider.Song newSong){
+                                                //pausePlayback();
+                                                return randomSongProvider.getNewSong(context);
+                                            }
 
-                                                    new Thread(() -> {
+                                            @Override
+                                            protected void onPostExecute(final Song newSong){
 
-                                                        boolean removed = removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
-                                                        if (removed)
-                                                            RandomSongProvider.chosenSongs.remove(0);
+                                                new Thread(() -> {
 
-                                                        addTrack(newSong.uri); // TODO: add success check
-                                                        RandomSongProvider.chosenSongs.add(newSong);
+                                                    boolean removed = removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
+                                                    if (removed)
+                                                        RandomSongProvider.chosenSongs.remove(0);
 
-                                                        startPlayback();
+                                                    addTrack(newSong.uri); // TODO: add success check
+                                                    RandomSongProvider.chosenSongs.add(newSong);
 
-                                                    }).start();
-                                                }
+                                                    startPlayback();
+                                                    context.sendBroadcast(new Intent("shufflemore.updateUI"));
 
-                                            }.execute();
+                                                }).start();
+                                            }
+                                         }.execute();
+                                }
 
-                                            context.sendBroadcast(new Intent("shufflemore.playnext"));
-                                        }
-                                    }
+                                lastCallback = playerState.track.uri;
 
 /*
                                     if (lastPlayedSongUri.equals(RandomSongProvider.chosenSongs.get(0).uri)) {
@@ -322,8 +327,8 @@ class Playlist {
         return removeSuccess;
     }
 
-    private ArrayList<RandomSongProvider.Song> songList = new ArrayList<>();
-    ArrayList<RandomSongProvider.Song> getTracks() {
+    private ArrayList<Song> songList = new ArrayList<>();
+    ArrayList<Song> getTracks() {
 
         Log.v("sm_PLAYLIST", "Getting tracks list");
 
@@ -374,7 +379,7 @@ class Playlist {
 
         Log.v("sm_PLAYLIST","Starting playback");
         if (remoteConnected)
-            mSpotifyAppRemote.getPlayerApi().play(String.format("spotify:user:%s:playlist:%s", AppData.userId, Playlist.id));
+            mSpotifyAppRemote.getPlayerApi().play(String.format("spotify:user:%s:playlist:%s", AppData.userId, this.id));
 
         //TODO: else error
     }
