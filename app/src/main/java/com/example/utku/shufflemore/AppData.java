@@ -30,12 +30,12 @@ public class AppData {
 
     private Context context;
 
-    static String CLIENT_ID;
+    String CLIENT_ID;
     String CLIENT_SECRET;
 
     private String refreshToken;
     private String accessToken;
-    public static long expirationTime; //TODO write to file
+    static long expirationTime; //TODO write to file
 
     static String userId;
     static String userCountry;

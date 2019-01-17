@@ -55,7 +55,7 @@ class RandomSongProvider
 
     Song getNewSong(Context context)
     {
-        Log.v("sm_RSP", "Choosing new random song");
+        Log.v("sm_RANDSONG", "Choosing new random song from saved songs");
 
         Song song = null;
 
@@ -90,11 +90,11 @@ class RandomSongProvider
 
             if (!song.playable) {
 
-                Log.w("sm_RSP", song.name + " is not playable, getting another song");
+                Log.w("sm_RANDSONG", song.name + " is not playable, getting another song");
                 song = getNewSong(context);
 
             } else {
-                Log.v("sm_RSP", "Chosen song: " + song.name);
+                Log.v("sm_RANDSONG", "Chosen song: " + song.name + " by " + song.artist);
                 addToHistory(context, song.uri);
             }
         }

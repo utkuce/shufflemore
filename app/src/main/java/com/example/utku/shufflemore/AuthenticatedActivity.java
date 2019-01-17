@@ -59,7 +59,7 @@ public class AuthenticatedActivity extends MainActivity {
 
         super.onCreate(savedInstanceState);
 
-        Log.v("sm_AUTH", "Checking authentication");
+        Log.v("sm_AUTHACT", "Checking authentication");
         if (appData.getRefreshToken() == null)
             authenticateUser();
         else
@@ -76,7 +76,7 @@ public class AuthenticatedActivity extends MainActivity {
     @SuppressLint("StaticFieldLeak")
     private void userIsAuthenticated() {
 
-        Log.v("sm_AUTH", "User is authenticated");
+        Log.v("sm_AUTHACT", "User is authenticated");
 
         new AsyncTask<Void , Void, Void>() {
 
@@ -101,7 +101,7 @@ public class AuthenticatedActivity extends MainActivity {
     @SuppressLint("StaticFieldLeak")
     private void postAuthentication() {
 
-        Log.v("sm_AUTH", "Authentication complete");
+        Log.v("sm_AUTHACT", "Authentication complete");
 
         String connected_message = "Connected as " + "<b>" + AppData.userId + "</b>";
         ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
@@ -112,7 +112,7 @@ public class AuthenticatedActivity extends MainActivity {
 
     public void authenticateUser() {
 
-        Log.v("sm_AUTH", "Authenticating user");
+        Log.v("sm_AUTHACT", "Authenticating user");
 
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(appData.CLIENT_ID,
                 AuthenticationResponse.Type.CODE, REDIRECT_URI);
@@ -123,7 +123,7 @@ public class AuthenticatedActivity extends MainActivity {
 
     private void setUserInfo() {
 
-        Log.v("sm_AUTH", "Setting user info");
+        Log.v("sm_AUTHACT", "Setting user info");
 
         final Context context = this;
         runOnUiThread(() -> authDialog = ProgressDialog.show(context, "","Retrieving user id...",true));
@@ -144,10 +144,10 @@ public class AuthenticatedActivity extends MainActivity {
                         try {
 
                             AppData.userId = response.get("id").toString();
-                            Log.v("sm_AUTH", "Got user id: " + AppData.userId);
+                            Log.v("sm_AUTHACT", "Got user id: " + AppData.userId);
 
                             AppData.userCountry = response.get("country").toString();
-                            Log.v("sm_AUTH", "Got user country: " + AppData.userCountry);
+                            Log.v("sm_AUTHACT", "Got user country: " + AppData.userCountry);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -157,7 +157,7 @@ public class AuthenticatedActivity extends MainActivity {
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
 
-                        Log.e("sm_AUTH", "Could not get user info, response: " + String.valueOf(response));
+                        Log.e("sm_AUTHACT", "Could not get user info, response: " + String.valueOf(response));
                         runOnUiThread(() -> Toast.makeText(getApplicationContext(), "Couldn't set user id", Toast.LENGTH_LONG).show());
                     }
 
@@ -179,7 +179,7 @@ public class AuthenticatedActivity extends MainActivity {
             final AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthenticationResponse.Type.CODE)
             {
-                Log.v("sm_AUTH", "Authentication response code: " + response.getCode());
+                Log.v("sm_AUTHACT", "Authentication response code: " + response.getCode());
                 new AsyncTask<Void,Void,Void>(){
 
                     @Override
@@ -191,7 +191,7 @@ public class AuthenticatedActivity extends MainActivity {
                 }.execute();
             } else if (response.getType().equals(AuthenticationResponse.Type.ERROR)) {
 
-                Log.e("sm_AUTH", "Spotify Authentication Error: " + response.getError());
+                Log.e("sm_AUTHACT", "Spotify Authentication Error: " + response.getError());
                 new AlertDialog.Builder(AuthenticatedActivity.this)
                         .setTitle("Spotify Authentication Error")
                         .setMessage(response.getError())
@@ -202,7 +202,7 @@ public class AuthenticatedActivity extends MainActivity {
 
     private void retrieveRefreshToken(String code) {
 
-        Log.v("sm_AUTH", "Retrieving refresh token");
+        Log.v("sm_AUTHACT", "Retrieving refresh token");
 
         final Context context = this;
         runOnUiThread(() -> authDialog = ProgressDialog.show(context, "","Retrieving refresh token...",true));
@@ -223,7 +223,7 @@ public class AuthenticatedActivity extends MainActivity {
             @Override
             public void onSuccess(int i, Header[] headers, JSONObject response) {
 
-                Log.v("sm_AUTH", "Refresh token response (success): " + response);
+                Log.v("sm_AUTHACT", "Refresh token response (success): " + response);
                 try {
 
                     appData.setRefreshToken(response.get("refresh_token").toString());
@@ -249,7 +249,7 @@ public class AuthenticatedActivity extends MainActivity {
             @Override
             public void onFailure(int statusCode, Header[] headers, String res, Throwable t) {
 
-                Log.e("sm_AUTH", "Refresh token response (failed): " + res);
+                Log.e("sm_AUTHACT", "Refresh token response (failed): " + res);
                 new AlertDialog.Builder(getApplication())
                         .setTitle("ShuffleMore")
                         .setMessage("Setting refresh token failed")
@@ -278,9 +278,9 @@ public class AuthenticatedActivity extends MainActivity {
             public void onReceive(final Context context, Intent intent) {
                 String action = intent.getAction();
 
-                if (action != null && action.equals("shufflemore.playnext")) {
+                if (action != null && action.equals("shufflemore.updateUI")) {
 
-                    Log.v("sm_AUTH", "playnext received");
+                    Log.v("sm_AUTHACT", "updateUI intent received");
 
                     runOnUiThread(() -> {
                         setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
@@ -292,7 +292,7 @@ public class AuthenticatedActivity extends MainActivity {
         };
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction("shufflemore.playnext");
+        filter.addAction("shufflemore.updateUI");
         registerReceiver(receiver, filter);
 
         final Context context = this;
