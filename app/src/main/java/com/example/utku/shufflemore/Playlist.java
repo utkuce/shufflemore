@@ -1,7 +1,9 @@
 package com.example.utku.shufflemore;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -30,8 +32,10 @@ class Playlist {
     private Context context;
     private AppData appData;
 
-    static SpotifyAppRemote mSpotifyAppRemote;
+    private static SpotifyAppRemote mSpotifyAppRemote;
     private boolean remoteConnected = false;
+
+    private RandomSongProvider randomSongProvider;
 
     Playlist(final Context context, AppData appData) {
 
@@ -39,7 +43,7 @@ class Playlist {
         this.appData = appData;
 
         ConnectionParams connectionParams =
-                new ConnectionParams.Builder(AppData.CLIENT_ID)
+                new ConnectionParams.Builder(appData.CLIENT_ID)
                         .setRedirectUri(AuthenticatedActivity.REDIRECT_URI)
                         .showAuthView(true)
                         .build();
@@ -47,12 +51,15 @@ class Playlist {
         SpotifyAppRemote.connect(context, connectionParams,
                 new Connector.ConnectionListener() {
 
+                    @SuppressLint("StaticFieldLeak")
                     @Override
                     public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+
                         mSpotifyAppRemote = spotifyAppRemote;
                         Log.v("sm_PLAYLIST","Spotify App Remote connected");
-
                         remoteConnected = true;
+
+                        randomSongProvider = new RandomSongProvider(appData);
 
                         mSpotifyAppRemote.getPlayerApi()
                                 .subscribeToPlayerState()
@@ -65,10 +72,40 @@ class Playlist {
                                     String lastInPlaylist = RandomSongProvider.chosenSongs.get(lastIndex).uri;
 
                                     if (currentSong.equals(lastInPlaylist)) {
+                                        if (!playerState.isPaused) {
+                                            Log.v("sm_PLAYLIST","Song ended, adjusting next up");
 
-                                        Log.v("sm_PLAYLIST","Playlist exhausted, getting new list");
-                                        context.sendBroadcast(new Intent("shufflemore.playnext"));
-                                        // TODO: queue new playlist
+
+                                            new AsyncTask<Void , Void, RandomSongProvider.Song>()
+                                            {
+                                                @Override
+                                                protected RandomSongProvider.Song doInBackground (Void... v)  {
+
+                                                    pausePlayback();
+                                                    return randomSongProvider.getNewSong(context);
+                                                }
+
+                                                @Override
+                                                protected void onPostExecute(final RandomSongProvider.Song newSong){
+
+                                                    new Thread(() -> {
+
+                                                        boolean removed = removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
+                                                        if (removed)
+                                                            RandomSongProvider.chosenSongs.remove(0);
+
+                                                        addTrack(newSong.uri); // TODO: add success check
+                                                        RandomSongProvider.chosenSongs.add(newSong);
+
+                                                        startPlayback();
+
+                                                    }).start();
+                                                }
+
+                                            }.execute();
+
+                                            context.sendBroadcast(new Intent("shufflemore.playnext"));
+                                        }
                                     }
 
 /*
@@ -340,5 +377,10 @@ class Playlist {
             mSpotifyAppRemote.getPlayerApi().play(String.format("spotify:user:%s:playlist:%s", AppData.userId, Playlist.id));
 
         //TODO: else error
+    }
+
+    private void pausePlayback() {
+
+        mSpotifyAppRemote.getPlayerApi().pause();
     }
 }

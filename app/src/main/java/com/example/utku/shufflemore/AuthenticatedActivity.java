@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
@@ -79,7 +78,6 @@ public class AuthenticatedActivity extends MainActivity {
 
         Log.v("sm_AUTH", "User is authenticated");
 
-        final Context context = this;
         new AsyncTask<Void , Void, Void>() {
 
             @Override
@@ -87,6 +85,7 @@ public class AuthenticatedActivity extends MainActivity {
 
                 if (AppData.userId == null)
                     setUserInfo();
+
                 return null;
             }
 
@@ -234,7 +233,7 @@ public class AuthenticatedActivity extends MainActivity {
                     fileOutputStream.write(appData.getRefreshToken().getBytes());
                     fileOutputStream.close();
 
-                    AppData.setHistory(new Vector<String>(), getApplication());
+                    AppData.setHistory(new Vector<>(), getApplication());
 
                     appData.setAccessToken(response.get("access_token").toString());
                     AppData.expirationTime = System.currentTimeMillis() +
@@ -279,40 +278,15 @@ public class AuthenticatedActivity extends MainActivity {
             public void onReceive(final Context context, Intent intent) {
                 String action = intent.getAction();
 
-                if (action.equals("shufflemore.playnext")) {
+                if (action != null && action.equals("shufflemore.playnext")) {
 
                     Log.v("sm_AUTH", "playnext received");
 
-                    new AsyncTask<Void , Void, RandomSongProvider.Song>()
-                    {
-                        @Override
-                        protected RandomSongProvider.Song doInBackground (Void... v)  {
+                    runOnUiThread(() -> {
+                        setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
+                        setNextSongUI(RandomSongProvider.chosenSongs.get(1));
+                    });
 
-                            return randomSongProvider.getNewSong(context);
-                        }
-
-                        @Override
-                        protected void onPostExecute(final RandomSongProvider.Song newSong){
-
-                            new Thread(() -> {
-
-                                boolean removed = spotifyPlaylist.removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
-                                if (removed)
-                                    RandomSongProvider.chosenSongs.remove(0);
-
-                                spotifyPlaylist.addTrack(newSong.uri); // TODO: add success check
-                                RandomSongProvider.chosenSongs.add(newSong);
-
-
-                                runOnUiThread(() -> {
-                                    setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
-                                    setNextSongUI(newSong);
-                                });
-
-                            }).start();
-                        }
-
-                    }.execute();
                 }
             }
         };
