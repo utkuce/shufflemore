@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 
 public class PlayBackReceiverService extends Service {
@@ -21,7 +22,7 @@ public class PlayBackReceiverService extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.spotify.music.metadatachanged");
         registerReceiver(receiver, filter);
-        System.out.println("Playback state service started");
+        Log.v("sm_PLAYBACK","Playback state service started");
 
         notificationBuilder = getNotification(this);
         NotificationManager nm = ((NotificationManager)getSystemService(NOTIFICATION_SERVICE));
@@ -34,7 +35,7 @@ public class PlayBackReceiverService extends Service {
     @Override
     public void onDestroy()
     {
-        System.out.println("Playback state service stopped");
+        Log.v("sm_PLAYBACK","Playback state service stopped");
 
         NotificationManager nm;
         if (((nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE))) != null)
@@ -56,11 +57,11 @@ public class PlayBackReceiverService extends Service {
             if (action != null && action.equals("com.spotify.music.metadatachanged")) {
 
                 //TODO save playlist position to return back later
-                System.out.println("Metadata changed");
+                Log.v("sm_PLAYBACK","Metadata changed");
 
                 if (intent.getStringExtra("id").equals(RandomSongProvider.chosenSongs.get(1).uri)) {
 
-                    System.out.println("Random song finished, adjusting playlist");
+                    Log.v("sm_PLAYBACK","Random song finished, adjusting playlist");
                     sendBroadcast(new Intent("shufflemore.playnext"));
                 }
 

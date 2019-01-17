@@ -50,7 +50,7 @@ class Playlist {
                     @Override
                     public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                         mSpotifyAppRemote = spotifyAppRemote;
-                        System.out.println("Spotify App Remote connected");
+                        Log.v("sm_PLAYLIST","Spotify App Remote connected");
 
                         remoteConnected = true;
 
@@ -58,7 +58,7 @@ class Playlist {
                                 .subscribeToPlayerState()
                                 .setEventCallback(playerState -> {
 
-                                    System.out.println("Player state event callback: " + playerState.track.name  + ", " + playerState.playbackPosition);
+                                    Log.v("sm_PLAYLIST","Player state event callback: " + playerState.track.name  + ", " + playerState.playbackPosition);
 
                                     String currentSong = playerState.track.uri;
                                     int lastIndex = RandomSongProvider.chosenSongs.size()-1;
@@ -66,7 +66,7 @@ class Playlist {
 
                                     if (currentSong.equals(lastInPlaylist)) {
 
-                                        System.out.println("Playlist exhausted, getting new list");
+                                        Log.v("sm_PLAYLIST","Playlist exhausted, getting new list");
                                         context.sendBroadcast(new Intent("shufflemore.playnext"));
                                         // TODO: queue new playlist
                                     }
@@ -74,7 +74,7 @@ class Playlist {
 /*
                                     if (lastPlayedSongUri.equals(RandomSongProvider.chosenSongs.get(0).uri)) {
                                         if (playerState.track.uri.equals(RandomSongProvider.chosenSongs.get(1).uri)) {
-                                            System.out.println("Random Song finished, adjusting playlist");
+                                            Log.v("sm_PLAYLIST","Random Song finished, adjusting playlist");
                                             context.sendBroadcast(new Intent("shufflemore.playnext"));
                                         }
                                     }
@@ -135,7 +135,7 @@ class Playlist {
             public void onFailure(int statusCode, Header[] headers, String res, Throwable t) {
 
                 Toast.makeText(context, statusCode + " Playlist not created", Toast.LENGTH_LONG).show();
-                System.out.println(statusCode + " res: " + res);
+                Log.e("sm_PLAYLIST",statusCode + " res: " + res);
             }
 
         });
@@ -143,6 +143,8 @@ class Playlist {
 
     private boolean alreadyExists = false;
     boolean alreadyExists() {
+
+        Log.v("sm_PLAYLIST", "Checking if playlist already exists");
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -167,7 +169,7 @@ class Playlist {
 
                                     alreadyExists = true;
                                     id = playlist.get("id").toString();
-                                    System.out.println("Playlist id: " + id);
+                                    Log.v("sm_PLAYLIST","Playlist id: " + id);
                                 }
                             }
 
@@ -178,7 +180,7 @@ class Playlist {
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
-                        System.out.println("Failure (response): " + response);
+                        Log.e("sm_PLAYLIST",statusCode + " Failure (response): " + response);
                     }
                 });
 
@@ -221,14 +223,14 @@ class Playlist {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
-                System.out.println("New track added to playlist");
+                Log.v("sm_PLAYLIST","New track added to playlist");
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject res) {
 
-                Toast.makeText(context, statusCode + " Playlist not created", Toast.LENGTH_LONG).show();
-                System.out.println(statusCode + " res: " + res);
+                Toast.makeText(context, statusCode + " Playlist could not be created", Toast.LENGTH_LONG).show();
+                Log.e("sm_PLAYLIST",statusCode + " res: " + res);
             }
 
         });
@@ -268,14 +270,14 @@ class Playlist {
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
                 removeSuccess = true;
-                System.out.println("Track removed from playlist");
+                Log.v("sm_PLAYLIST","Track removed from playlist");
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject res) {
 
-                Toast.makeText(context, statusCode + " Track not removed", Toast.LENGTH_LONG).show();
-                System.out.println(statusCode + " res: " + res);
+                Toast.makeText(context, statusCode + " Track could not be removed", Toast.LENGTH_LONG).show();
+                Log.e("sm_PLAYLIST",statusCode + " res: " + res);
             }
 
         });
@@ -285,6 +287,8 @@ class Playlist {
 
     private ArrayList<RandomSongProvider.Song> songList = new ArrayList<>();
     ArrayList<RandomSongProvider.Song> getTracks() {
+
+        Log.v("sm_PLAYLIST", "Getting tracks list");
 
         songList.clear();
         String url = String.format("https://api.spotify.com/v1/users/%s/playlists/%s/tracks", AppData.userId, id);
@@ -305,12 +309,12 @@ class Playlist {
                         try {
 
                             JSONArray tracks = response.getJSONArray("items");
-                            System.out.println(tracks.length() + " songs currently in playlist:");
+                            Log.v("sm_PLAYLIST",tracks.length() + " songs currently in playlist:");
 
                             for (int i=0; i<tracks.length(); i++) {
 
                                 JSONObject track = tracks.getJSONObject(i).getJSONObject("track");
-                                System.out.println("Track name: " + track.get("name").toString());
+                                Log.v("sm_PLAYLIST","Track name: " + track.get("name").toString());
                                 songList.add(RandomSongProvider.getTrackProperties(track));
                             }
 
@@ -322,7 +326,7 @@ class Playlist {
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
-                        System.out.println("Response (failure): " + response);
+                        Log.e("sm_PLAYLIST",statusCode + "Failure (response): " + response);
                     }
                 });
 
@@ -331,7 +335,7 @@ class Playlist {
 
     void startPlayback() {
 
-        System.out.println("Starting playback");
+        Log.v("sm_PLAYLIST","Starting playback");
         if (remoteConnected)
             mSpotifyAppRemote.getPlayerApi().play(String.format("spotify:user:%s:playlist:%s", AppData.userId, Playlist.id));
 

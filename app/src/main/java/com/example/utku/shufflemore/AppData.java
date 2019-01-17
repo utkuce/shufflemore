@@ -3,6 +3,7 @@ package com.example.utku.shufflemore;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -50,17 +51,17 @@ public class AppData {
 
     void setAccessToken(String token) {
 
-        System.out.println("Saving access token for session");
+        Log.v("sm_APPDATA","Saving access token for session");
         accessToken = token;
     }
 
     String getAccessToken() {
 
-        System.out.println("Reading access token");
+        Log.v("sm_APPDATA","Reading access token");
 
         if (accessToken == null)
         {
-            System.out.println("Access token not found");
+            Log.v("sm_APPDATA","Access token not found");
             retrieveAccessToken();
         }
 
@@ -74,7 +75,7 @@ public class AppData {
 
     String getRefreshToken()
     {
-        System.out.println("Reading refresh token");
+        Log.v("sm_APPDATA","Reading refresh token");
 
         if (refreshToken == null) {
 
@@ -88,7 +89,7 @@ public class AppData {
             } catch (FileNotFoundException e) {
 
                 Toast.makeText(context, "Refresh token not found", Toast.LENGTH_LONG).show();
-                System.out.println("File not found: " + file.getPath());
+                Log.e("sm_APPDATA","File not found: " + file.getPath());
                 return null;
 
             } catch (IOException e) {
@@ -98,7 +99,7 @@ public class AppData {
             }
         }
 
-        //System.out.println("Refresh token: " + refreshToken);
+        Log.v("sm_APPDATA","Refresh token read: ");//+ refreshToken);
         return refreshToken;
     }
 
@@ -113,13 +114,13 @@ public class AppData {
             in.close();
             fileIn.close();
 
-            //System.out.println("History: " + h);
+            //Log.v("sm_APPDATA","History: " + h);
             return h;
 
         }catch(IOException i) {
             i.printStackTrace();
         }catch(ClassNotFoundException c) {
-            System.out.println("Class not found");
+            Log.e("sm_APPDATA","Class not found");
             c.printStackTrace();
         }
 
@@ -149,7 +150,7 @@ public class AppData {
 
     private void retrieveAccessToken()
     {
-        System.out.println("Retrieving access token");
+        Log.v("sm_APPDATA","Retrieving access token");
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -171,7 +172,7 @@ public class AppData {
                     expirationTime = System.currentTimeMillis() +
                             Integer.parseInt(response.get("expires_in").toString()) * 1000;
 
-                    System.out.println("Access token refreshed");
+                    Log.v("sm_APPDATA","Access token refreshed");
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -181,12 +182,12 @@ public class AppData {
             @Override
             public void onFailure(int statusCode, Header[] headers, String response, Throwable t) {
 
-                System.out.println("Http request failed: " + statusCode);
+                Log.e("sm_APPDATA","Http request failed: " + statusCode);
 
                 //((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
                 //      .notify(0, MainActivity.getNotification(context).setContentText("Connection problem").build());
 
-                System.out.println("Failed to retrieve access token");
+                Log.e("sm_APPDATA","Failed to retrieve access token");
                 new AlertDialog.Builder(context)
                         .setMessage("Failed to retrieve access token")
                         .setPositiveButton("ok", (dialog, which) -> {

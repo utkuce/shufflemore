@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.Html;
+import android.util.Log;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -54,7 +55,7 @@ class RandomSongProvider
 
     Song getNewSong(Context context)
     {
-        System.out.println("Choosing new random song");
+        Log.v("sm_RSP", "Choosing new random song");
 
         Song song = null;
 
@@ -89,11 +90,11 @@ class RandomSongProvider
 
             if (!song.playable) {
 
-                System.out.println(song.name + " is not playable, getting another song");
+                Log.w("sm_RSP", song.name + " is not playable, getting another song");
                 song = getNewSong(context);
 
             } else {
-                System.out.println("Chosen song: " + song.name);
+                Log.v("sm_RSP", "Chosen song: " + song.name);
                 addToHistory(context, song.uri);
             }
         }
