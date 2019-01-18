@@ -127,7 +127,7 @@ public class AppData {
         return null;
     }
 
-    static void setHistory(Vector<String> history, Context context)
+    void setHistory(Vector<String> history, Context context)
     {
         try {
             File file = new File(context.getFilesDir(), "history.dat");

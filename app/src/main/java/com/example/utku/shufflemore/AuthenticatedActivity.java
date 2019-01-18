@@ -233,7 +233,7 @@ public class AuthenticatedActivity extends MainActivity {
                     fileOutputStream.write(appData.getRefreshToken().getBytes());
                     fileOutputStream.close();
 
-                    AppData.setHistory(new Vector<>(), getApplication());
+                    appData.setHistory(new Vector<>(), getApplication());
 
                     appData.setAccessToken(response.get("access_token").toString());
                     AppData.expirationTime = System.currentTimeMillis() +
