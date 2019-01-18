@@ -105,7 +105,7 @@ class RandomSongProvider
                     }
                 }
 
-            } while (history.contains(song.uri) && song.uri == null);
+            } while (history.contains(song.uri) || song.uri == null);
         }
 
         if (song!= null) {
