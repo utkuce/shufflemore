@@ -2,10 +2,14 @@ package com.example.utku.shufflemore;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -36,7 +40,35 @@ public class MainActivity extends AppCompatActivity {
 
     public void playButton(View v) {
 
-        spotifyPlaylist.startPlayback();
+        spotifyPlaylist.mSpotifyAppRemote.getPlayerApi()
+                .getPlayerState().setResultCallback(playerState -> {
+
+            if (playerState.isPaused) {
+
+                // if chosen song is playing
+                if (playerState.playbackPosition > 1000
+                        && playerState.track.uri.equals(RandomSongProvider.chosenSongs.get(0).uri)) {
+
+                    spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().resume();
+                    Log.v("sm_MAIN", "Resume button");
+
+                } else { // something else or nothing is playing
+
+                    spotifyPlaylist.startPlayback();
+                    Log.v("sm_MAIN", "Start button");
+
+                }
+
+                ((Button)findViewById(R.id.play_button)).setText("pause");
+
+            } else {
+
+                spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().pause();
+                ((Button)findViewById(R.id.play_button)).setText("play");
+                Log.v("sm_MAIN", "Continue button");
+
+            }
+        });
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -63,6 +95,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void changeNextSong() {
+
+        spotifyPlaylist.chosenButSkipped = RandomSongProvider.chosenSongs.get(1).uri;
 
         final Context context = this;
         new Thread(() -> {
@@ -103,5 +137,17 @@ public class MainActivity extends AppCompatActivity {
 
     public void shuffleButton(View view) {
         changeNextSong();
+    }
+
+    public void goToSpotify(View view) {
+
+        String uri = String.format("spotify:user:%s:playlist:%s", AppData.userId, spotifyPlaylist.id);
+        Intent launcher = new Intent( Intent.ACTION_VIEW, Uri.parse(uri) );
+        startActivity(launcher);
+    }
+
+    public void skipButton(View view) {
+
+        spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().skipNext();
     }
 }
