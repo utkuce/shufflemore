@@ -36,6 +36,7 @@ class Playlist {
     private AppData appData;
 
     SpotifyAppRemote mSpotifyAppRemote;
+    private static Connector.ConnectionListener connectionListener;
     private boolean remoteConnected = false;
 
     private RandomSongProvider randomSongProvider;
@@ -49,97 +50,94 @@ class Playlist {
         this.context = context;
         this.appData = appData;
 
-        ConnectionParams connectionParams =
-                new ConnectionParams.Builder(appData.CLIENT_ID)
-                        .setRedirectUri(AuthenticatedActivity.REDIRECT_URI)
-                        .showAuthView(true)
-                        .build();
+        connectionListener = new Connector.ConnectionListener() {
 
-        connectRemote(connectionParams);
+            @SuppressLint("StaticFieldLeak")
+            @Override
+            public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+
+                mSpotifyAppRemote = spotifyAppRemote;
+                Log.v("sm_PLAYLIST","Spotify App Remote connected");
+                Toast.makeText(context, "Spotify App Remote connected", Toast.LENGTH_SHORT).show();
+                remoteConnected = true;
+
+                randomSongProvider = new RandomSongProvider(appData);
+
+                mSpotifyAppRemote.getPlayerApi()
+                        .subscribeToPlayerState()
+                        .setEventCallback(playerState -> {
+
+                            //Log.v("sm_PLAYLIST","Player state event callback received: "
+                            //      + playerState.track.name  + ", " + playerState.playbackPosition);
+
+                            String currentSong = playerState.track.uri;
+                            int lastIndex = RandomSongProvider.chosenSongs.size()-1;
+                            String lastInPlaylist = RandomSongProvider.chosenSongs.get(lastIndex).uri;
+
+
+                            // if not getting repeat callbacks for the same song
+                            if (!currentSong.equals(lastCallback) &&
+                                    (currentSong.equals(lastInPlaylist) || currentSong.equals(chosenButSkipped))) {
+
+                                Log.v("sm_PLAYLIST","Song ended, adjusting next up");
+
+                                new AsyncTask<Void , Void, Song>()
+                                {
+                                    @Override
+                                    protected Song doInBackground (Void... v)  {
+
+                                        pausePlayback();
+                                        return randomSongProvider.getNewSong(context);
+                                    }
+
+                                    @Override
+                                    protected void onPostExecute(final Song newSong){
+
+                                        new Thread(() -> {
+
+                                            boolean removed = removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
+                                            if (removed)
+                                                RandomSongProvider.chosenSongs.remove(0);
+
+                                            addTrack(newSong.uri); // TODO: add success check
+                                            RandomSongProvider.chosenSongs.add(newSong);
+
+                                            chosenButSkipped = "";
+                                            startPlayback();
+                                            context.sendBroadcast(new Intent("shufflemore.updateUI"));
+
+                                        }).start();
+                                    }
+                                }.execute();
+                            }
+
+                            lastCallback = playerState.track.uri;
+                        });
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                Log.e("sm_PLAYLIST", "Connection lost to Spotify App Remote");
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+                builder.setTitle("Connection lost to Spotify App Remote")
+                        .setMessage(throwable.getMessage())
+                        .setPositiveButton("reconnect", (dialog, which) -> connectAppRemote(context))
+                        .show();
+            }
+        };
     }
 
     @SuppressLint("StaticFieldLeak")
-    private void connectRemote(ConnectionParams connectionParams) {
+    static void connectAppRemote(Context context) {
 
-        SpotifyAppRemote.connect(context, connectionParams,
-                new Connector.ConnectionListener() {
+        ConnectionParams connectionParams = new ConnectionParams.Builder(AppData.CLIENT_ID)
+                .setRedirectUri(AuthenticatedActivity.REDIRECT_URI)
+                .showAuthView(true)
+                .build();
 
-                    @SuppressLint("StaticFieldLeak")
-                    @Override
-                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-
-                        mSpotifyAppRemote = spotifyAppRemote;
-                        Log.v("sm_PLAYLIST","Spotify App Remote connected");
-                        remoteConnected = true;
-
-                        randomSongProvider = new RandomSongProvider(appData);
-
-                        mSpotifyAppRemote.getPlayerApi()
-                                .subscribeToPlayerState()
-                                .setEventCallback(playerState -> {
-
-                                    //Log.v("sm_PLAYLIST","Player state event callback received: "
-                                    //      + playerState.track.name  + ", " + playerState.playbackPosition);
-
-                                    String currentSong = playerState.track.uri;
-                                    int lastIndex = RandomSongProvider.chosenSongs.size()-1;
-                                    String lastInPlaylist = RandomSongProvider.chosenSongs.get(lastIndex).uri;
-
-
-                                    // if not getting repeat callbacks for the same song
-                                    if (!currentSong.equals(lastCallback) &&
-                                            (currentSong.equals(lastInPlaylist) || currentSong.equals(chosenButSkipped))) {
-
-                                        Log.v("sm_PLAYLIST","Song ended, adjusting next up");
-
-                                        new AsyncTask<Void , Void, Song>()
-                                        {
-                                            @Override
-                                            protected Song doInBackground (Void... v)  {
-
-                                                pausePlayback();
-                                                return randomSongProvider.getNewSong(context);
-                                            }
-
-                                            @Override
-                                            protected void onPostExecute(final Song newSong){
-
-                                                new Thread(() -> {
-
-                                                    boolean removed = removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
-                                                    if (removed)
-                                                        RandomSongProvider.chosenSongs.remove(0);
-
-                                                    addTrack(newSong.uri); // TODO: add success check
-                                                    RandomSongProvider.chosenSongs.add(newSong);
-
-                                                    chosenButSkipped = "";
-                                                    startPlayback();
-                                                    context.sendBroadcast(new Intent("shufflemore.updateUI"));
-
-                                                }).start();
-                                            }
-                                        }.execute();
-                                    }
-
-                                    lastCallback = playerState.track.uri;
-                                });
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable) {
-                        Log.e("sm_PLAYLIST", "Connection lost to Spotify App Remote");
-
-                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-
-                        builder.setTitle("Connection lost to Spotify App Remote")
-                                .setMessage(throwable.getMessage())
-                                .setPositiveButton("reconnect", (dialog, which) -> {
-                                    connectRemote(connectionParams);
-                                })
-                                .show();
-                    }
-                });
+        SpotifyAppRemote.connect(context, connectionParams, connectionListener);
 
     }
 

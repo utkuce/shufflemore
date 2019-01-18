@@ -30,7 +30,7 @@ public class AppData {
 
     private Context context;
 
-    String CLIENT_ID;
+    static String CLIENT_ID;
     String CLIENT_SECRET;
 
     private String refreshToken;

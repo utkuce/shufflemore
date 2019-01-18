@@ -52,7 +52,8 @@ public class AuthenticatedActivity extends MainActivity {
             "app-remote-control"
     };
 
-    private BroadcastReceiver receiver;
+    private BroadcastReceiver broadcastReceiver;
+    private Intent spotifyRemoteService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,8 +70,8 @@ public class AuthenticatedActivity extends MainActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(receiver);
-
+        unregisterReceiver(broadcastReceiver);
+        stopService(spotifyRemoteService);
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -272,28 +273,39 @@ public class AuthenticatedActivity extends MainActivity {
         spotifyPlaylist = new Playlist(this, appData);
         randomSongProvider = new RandomSongProvider(appData);
 
-        receiver = new BroadcastReceiver() {
+        broadcastReceiver = new BroadcastReceiver() {
 
             @Override
             public void onReceive(final Context context, Intent intent) {
                 String action = intent.getAction();
 
-                if (action != null && action.equals("shufflemore.updateUI")) {
+                if (action != null) {
 
-                    Log.v("sm_AUTHACT", "updateUI intent received");
+                    if (action.equals("shufflemore.updateUI")) {
 
-                    runOnUiThread(() -> {
-                        setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
-                        setNextSongUI(RandomSongProvider.chosenSongs.get(1));
-                    });
+                        Log.v("sm_AUTHACT", "updateUI intent received");
 
+                        runOnUiThread(() -> {
+
+                            updateUI(RandomSongProvider.chosenSongs.get(0),
+                                    RandomSongProvider.chosenSongs.get(1));
+                        });
+
+                    } else if (action.equals("shufflemore.changenext")) {
+
+                        Log.v("sm_AUTHACT", "changenext intent received");
+                        changeNextSong();
+                    }
+
+                } else {
+                    Log.e("sm_AUTHACT", "Received empty action");
                 }
             }
         };
 
         IntentFilter filter = new IntentFilter();
         filter.addAction("shufflemore.updateUI");
-        registerReceiver(receiver, filter);
+        registerReceiver(broadcastReceiver, filter);
 
         final Context context = this;
         if (RandomSongProvider.chosenSongs.isEmpty()) {
@@ -321,14 +333,18 @@ public class AuthenticatedActivity extends MainActivity {
                 @Override
                 protected void onPostExecute(Void v){
 
-                    setCurrentSongUI(RandomSongProvider.chosenSongs.get(0));
-                    setNextSongUI(RandomSongProvider.chosenSongs.get(1));
+                    spotifyRemoteService = new Intent(context, RemoteService.class);
+                    context.startService(spotifyRemoteService);
 
-                    //startService(new Intent(AuthenticatedActivity.this, PlayBackReceiverService.class));
+                    updateUI(RandomSongProvider.chosenSongs.get(0),
+                            RandomSongProvider.chosenSongs.get(1));
+
+
                 }
 
             }.execute();
         }
     }
+
 }
 

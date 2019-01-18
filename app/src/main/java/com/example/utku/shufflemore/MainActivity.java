@@ -1,6 +1,7 @@
 package com.example.utku.shufflemore;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -112,15 +113,28 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
 
                 setNextSongUI(RandomSongProvider.chosenSongs.get(1));
+                updateNotification();
 
-             /*   ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
-                        .notify(0, PlayBackReceiverService.getNotification(context)
-                                .setContentTitle(newSong.name)
-                                .setContentText(newSong.artist)
-                                .setLargeIcon(newSong.cover)
-                                .build());*/
             });
         }).start();
+    }
+
+    void updateUI(RandomSongProvider.Song current, RandomSongProvider.Song nextUp) {
+
+        updateNotification();
+        setCurrentSongUI(current);
+        setNextSongUI(nextUp);
+    }
+
+    void updateNotification() {
+
+        RandomSongProvider.Song nextUp = RandomSongProvider.chosenSongs.get(1);
+        ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
+                .notify(0, RemoteService.getNotification(this)
+                        .setContentTitle(nextUp.name)
+                        .setContentText(nextUp.artist)
+                        .setLargeIcon(nextUp.cover)
+                        .build());
     }
 
     void setCurrentSongUI(RandomSongProvider.Song song) {
