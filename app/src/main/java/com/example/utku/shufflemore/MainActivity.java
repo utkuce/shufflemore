@@ -50,12 +50,12 @@ public class MainActivity extends AppCompatActivity {
                         && playerState.track.uri.equals(RandomSongProvider.chosenSongs.get(0).uri)) {
 
                     spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().resume();
-                    Log.v("sm_MAIN", "Resume button");
+                    Log.v("sm_MAIN", "Resume button pressed");
 
                 } else { // something else or nothing is playing
 
                     spotifyPlaylist.startPlayback();
-                    Log.v("sm_MAIN", "Start button");
+                    Log.v("sm_MAIN", "Start button pressed");
 
                 }
 
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
                 spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().pause();
                 ((Button)findViewById(R.id.play_button)).setText("play");
-                Log.v("sm_MAIN", "Continue button");
+                Log.v("sm_MAIN", "Continue button pressed");
 
             }
         });
@@ -96,7 +96,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void changeNextSong() {
 
-        spotifyPlaylist.chosenButSkipped = RandomSongProvider.chosenSongs.get(1).uri;
+        if (spotifyPlaylist.chosenButSkipped.equals("")) {
+            spotifyPlaylist.chosenButSkipped = RandomSongProvider.chosenSongs.get(1).uri;
+        }
 
         final Context context = this;
         new Thread(() -> {
