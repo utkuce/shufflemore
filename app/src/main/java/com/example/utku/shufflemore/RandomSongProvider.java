@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Vector;
@@ -34,17 +35,26 @@ class RandomSongProvider
         this.appData = appData;
     }
 
-    private void addToHistory(Context context, String uri)
+    private void addToHistory(Context context, Song song)
     {
         Vector<String> history = AppData.getHistory(context);
         if (history != null) {
-            history.add(uri);
-            while (history.size() > totalTracks * 0.5)
-                history.removeElementAt(0);
-            AppData.setHistory(history,context);
+
+            history.add(song.uri);
+            Log.v("sm_RANDSONG", song.name + " added to history at index " + String.valueOf(history.size()-1));
+
+            if (totalTracks != -1) {
+                while (history.size() > totalTracks * 0.5)
+                    history.removeElementAt(0);
+            }
+
+            appData.setHistory(history,context);
         }
-        else
-            Toast.makeText(context, "Cant read song history", Toast.LENGTH_LONG).show();
+        else {
+
+            Log.e("sm_SONGRAND", "Can't read song history");
+            Toast.makeText(context, "Can't read song history", Toast.LENGTH_LONG).show();
+        }
     }
 
     static class Song {
@@ -62,8 +72,20 @@ class RandomSongProvider
         if ((totalTracks = (totalTracks == -1) ? getTotalTracks() : totalTracks) != -1)
         {
             Vector<String> history = AppData.getHistory(context);
+            if (history != null ) {
+                if (history.isEmpty()) {
+                    Log.w("sm_RANDSONG", "Song history is empty");
+                }
+            } else {
+                Toast.makeText(context,
+                        Html.fromHtml("<b>Warning:</b> Cant read song history"),
+                        Toast.LENGTH_LONG).show();
+
+                return null;
+            }
 
             do {
+
                 int offset = new Random(System.currentTimeMillis()).nextInt(totalTracks + 1);
                 JSONObject response = getTrackObject(offset);
                 song = getTrackProperties(response);
@@ -73,14 +95,14 @@ class RandomSongProvider
                     Toast.makeText(context,
                             Html.fromHtml("<b>Error:</b> Can't get song properties"),
                             Toast.LENGTH_LONG).show();
-                    return null;
-                }
 
-                if (history == null) {
-                    Toast.makeText(context,
-                            Html.fromHtml("<b>Warning:</b> Cant read song history"),
-                            Toast.LENGTH_LONG).show();
-                    break;
+                    return null;
+
+                } else {
+
+                    if (history.contains(song.uri)) {
+                        Log.v("sm_RANDSONG", song.name + " played recently, skipping");
+                    }
                 }
 
             } while (history.contains(song.uri) && song.uri == null);
@@ -95,7 +117,7 @@ class RandomSongProvider
 
             } else {
                 Log.v("sm_RANDSONG", "Chosen song: " + song.name + " by " + song.artist);
-                addToHistory(context, song.uri);
+                addToHistory(context, song);
             }
         }
 
@@ -116,7 +138,7 @@ class RandomSongProvider
             conn.setRequestProperty("Accept", "application/json");
             conn.setRequestProperty("Authorization", "Bearer " + appData.getAccessToken());
 
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
                 for (String line; (line = reader.readLine()) != null; ) {
                     response.append(line).append("\n");
                 }

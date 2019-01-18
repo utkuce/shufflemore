@@ -87,7 +87,7 @@ class Playlist {
                                             @Override
                                             protected Song doInBackground (Void... v)  {
 
-                                                //pausePlayback();
+                                                pausePlayback();
                                                 return randomSongProvider.getNewSong(context);
                                             }
 
@@ -132,8 +132,8 @@ class Playlist {
                     }
                 });
 
-        if (!alreadyExists())
-            create();
+
+
     }
 
     void create() {
@@ -211,7 +211,7 @@ class Playlist {
 
                                     alreadyExists = true;
                                     id = playlist.get("id").toString();
-                                    Log.v("sm_PLAYLIST","Playlist id: " + id);
+                                    Log.v("sm_PLAYLIST","Playlist already exists, playlist id: " + id);
                                 }
                             }
 
@@ -222,7 +222,7 @@ class Playlist {
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
-                        Log.e("sm_PLAYLIST",statusCode + " Failure (response): " + response);
+                        Log.e("sm_PLAYLIST","Status code: " + statusCode + " Playlist exists check failed, response: " + response);
                     }
                 });
 
@@ -368,7 +368,7 @@ class Playlist {
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
-                        Log.e("sm_PLAYLIST",statusCode + "Failure (response): " + response);
+                        Log.e("sm_PLAYLIST","Status code: " + statusCode + "Get tracks failed, responsea: " + response);
                     }
                 });
 
@@ -387,5 +387,6 @@ class Playlist {
     private void pausePlayback() {
 
         mSpotifyAppRemote.getPlayerApi().pause();
+        Log.v("sm_PLAYLIST", "Playback paused");
     }
 }
