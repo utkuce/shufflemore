@@ -21,10 +21,7 @@ public class RemoteService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         notificationBuilder = getNotification(this);
-        NotificationManager nm = ((NotificationManager)getSystemService(NOTIFICATION_SERVICE));
-        if (nm != null)
-            nm.notify(0, notificationBuilder.build());
-
+        startForeground(0, notificationBuilder.build());
         Playlist.connectAppRemote(this);
 
         Log.v("sm_REMOTE", "Remote service started");
@@ -34,7 +31,7 @@ public class RemoteService extends Service {
     @Override
     public void onDestroy()
     {
-        Log.v("sm_REMOTE","Remote service stopped");
+        Log.w("sm_REMOTE","Remote service stopped");
 
         NotificationManager nm;
         if (((nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE))) != null)
@@ -54,9 +51,17 @@ public class RemoteService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification.Builder builder =  new Notification.Builder(context)
+
                 .setSubText("Next up")
-                .addAction(R.drawable.baseline_low_priority_24, "shuffle", changeNext)
-                .setSmallIcon(R.drawable.baseline_shuffle_24)
+
+                .addAction(R.drawable.round_play_circle_outline_24, "play", null)
+                .addAction(R.drawable.round_refresh_24, "shuffle", changeNext)
+                .addAction(R.drawable.round_album_24, "album", null)
+                .addAction(R.drawable.round_people_24, "artist", null)
+                .addAction(R.drawable.round_close_24, "close", null)
+
+                .setSmallIcon(R.drawable.round_shuffle_24)
+
                 .setContentIntent(pendingIntent)
                 .setOngoing(true);
 
@@ -79,7 +84,7 @@ public class RemoteService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
             builder.setStyle(new Notification.MediaStyle()
-                    .setShowActionsInCompactView(0));
+                    .setShowActionsInCompactView(0,1));
         }
 
         if (!RandomSongProvider.chosenSongs.isEmpty()) {
