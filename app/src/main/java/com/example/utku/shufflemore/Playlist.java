@@ -117,14 +117,17 @@ class Playlist {
 
             @Override
             public void onFailure(Throwable throwable) {
-                Log.e("sm_PLAYLIST", "Connection lost to Spotify App Remote");
+                Log.w("sm_PLAYLIST", "Connection lost to Spotify App Remote, reconnecting");
+                connectAppRemote(context);
 
+                /*
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
                 builder.setTitle("Connection lost to Spotify App Remote")
                         .setMessage(throwable.getMessage())
                         .setPositiveButton("reconnect", (dialog, which) -> connectAppRemote(context))
                         .show();
+                */
             }
         };
     }
