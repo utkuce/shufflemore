@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.media.session.MediaSession;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -16,15 +15,20 @@ import android.util.Log;
 public class RemoteService extends Service {
 
     public static Notification.Builder notificationBuilder;
+    public static int notificationId = 123;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         notificationBuilder = getNotification(this);
-        startForeground(0, notificationBuilder.build());
-        Playlist.connectAppRemote(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForeground(notificationId, notificationBuilder.build());
+        }
+        Log.v("sm_REMOTE", "start foreground called");
 
+        Playlist.connectAppRemote(this);
         Log.v("sm_REMOTE", "Remote service started");
+
         return startId;
     }
 
@@ -35,7 +39,7 @@ public class RemoteService extends Service {
 
         NotificationManager nm;
         if (((nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE))) != null)
-            nm.cancel(0);
+            nm.cancel(notificationId);
     }
 
     public static Notification.Builder getNotification(Context context) {

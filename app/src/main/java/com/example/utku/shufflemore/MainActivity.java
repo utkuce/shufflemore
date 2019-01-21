@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
 
         super.onDestroy();
-        //stopService(new Intent(this, PlayBackReceiverService.class));
     }
 
     public void playButton(View v) {
@@ -130,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
         RandomSongProvider.Song nextUp = RandomSongProvider.chosenSongs.get(1);
         ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
-                .notify(0, RemoteService.getNotification(this)
+                .notify(RemoteService.notificationId, RemoteService.getNotification(this)
                         .setContentTitle(nextUp.name)
                         .setContentText(nextUp.artist)
                         .setLargeIcon(nextUp.cover)
@@ -139,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
 
     void setCurrentSongUI(RandomSongProvider.Song song) {
 
+        Log.v("sm_MAIN", "Updating current song UI");
         ((ImageView)findViewById(R.id.cover_art_current)).setImageBitmap(song.cover);
         ((TextView)findViewById(R.id.track_info_current)).setText(String.format("%s\n%s", song.name, song.artist));
 
@@ -146,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
     void setNextSongUI(RandomSongProvider.Song song) {
 
+        Log.v("sm_MAIN", "Updating next song UI");
         ((ImageView)findViewById(R.id.cover_art_next)).setImageBitmap(song.cover);
         ((TextView)findViewById(R.id.track_info_next)).setText(String.format("%s\n%s", song.name, song.artist));
 
@@ -157,8 +158,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void goToSpotify(View view) {
 
-        String uri = String.format("spotify:user:%s:playlist:%s", AppData.userId, spotifyPlaylist.id);
-        Intent launcher = new Intent( Intent.ACTION_VIEW, Uri.parse(uri) );
+        Intent launcher = new Intent( Intent.ACTION_VIEW, Uri.parse("spotify:open") );
         startActivity(launcher);
     }
 

@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.TextUtils;
@@ -334,7 +335,12 @@ public class AuthenticatedActivity extends MainActivity {
                 protected void onPostExecute(Void v){
 
                     spotifyRemoteService = new Intent(context, RemoteService.class);
-                    context.startService(spotifyRemoteService);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(spotifyRemoteService);
+                    } else {
+                        startService(spotifyRemoteService);
+                    }
 
                     updateUI(RandomSongProvider.chosenSongs.get(0),
                             RandomSongProvider.chosenSongs.get(1));
