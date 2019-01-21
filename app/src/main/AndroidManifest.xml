@@ -6,11 +6,11 @@
     <application
         tools:ignore="GoogleAppIndexingWarning"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/round_queue_music_24"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/round_queue_music_24"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
         <activity android:name=".AuthenticatedActivity">
             <intent-filter>
@@ -18,10 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".MainActivity"/>
-
-        <service android:name=".PlayBackReceiverService"/>
         <service android:name=".RemoteService"/>
 
     </application>
