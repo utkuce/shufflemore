@@ -27,7 +27,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 class RandomSongProvider
 {
-    private static int totalTracks = -1;
+    private Integer totalTracks = -1;
     static ArrayList<Song> chosenSongs = new ArrayList<>();
 
     private AppData appData;
@@ -58,6 +58,7 @@ class RandomSongProvider
     }
 
     static class Song {
+
         String uri, name, artist;
         Bitmap cover;
         boolean playable;
@@ -170,7 +171,23 @@ class RandomSongProvider
 
     private int getTotalTracks()
     {
-        return 900; //TODO actual number
+
+        new Thread(() -> {
+            getTrackObject(0); //this will set static field totalTracks
+
+        }).start();
+
+        //TODO: replace with notify wait
+        while (totalTracks == -1) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Log.v("sm_RANDOM", "Total number of tracks: " + totalTracks);
+        return totalTracks;
     }
 
     static Song getTrackProperties(JSONObject track) {
