@@ -14,6 +14,7 @@ import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -108,7 +109,6 @@ public class AuthenticatedActivity extends MainActivity {
         String connected_message = "Connected as " + "<b>" + AppData.userId + "</b>";
         ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
 
-        findViewById(R.id.gui).setVisibility(View.VISIBLE);
         startJob();
     }
 
@@ -282,20 +282,37 @@ public class AuthenticatedActivity extends MainActivity {
 
                 if (action != null) {
 
-                    if (action.equals("shufflemore.updateUI")) {
+                    Log.v("sm_AUTHACT", "intent received: " + action);
 
-                        Log.v("sm_AUTHACT", "updateUI intent received");
+                    switch (action) {
 
-                        runOnUiThread(() -> {
+                        case "shufflemore.updateUI":
 
-                            updateUI(RandomSongProvider.chosenSongs.get(0),
-                                    RandomSongProvider.chosenSongs.get(1));
-                        });
+                            runOnUiThread(() -> {
 
-                    } else if (action.equals("shufflemore.changenext")) {
+                                updateUI(RandomSongProvider.chosenSongs.get(0),
+                                        RandomSongProvider.chosenSongs.get(1));
+                            });
 
-                        Log.v("sm_AUTHACT", "changenext intent received");
-                        changeNextSong();
+                            break;
+
+                        case "shufflemore.changenext":
+
+                            changeNextSong();
+                            break;
+
+                        case "shufflemore.gotoalbum":
+                            break;
+
+                        case "shufflemore.gotoartist":
+                            break;
+
+                        case "shufflemore.stopservice":
+                            stopService(spotifyRemoteService);
+                            break;
+
+                        default:
+
                     }
 
                 } else {
@@ -345,7 +362,8 @@ public class AuthenticatedActivity extends MainActivity {
                     updateUI(RandomSongProvider.chosenSongs.get(0),
                             RandomSongProvider.chosenSongs.get(1));
 
-
+                    findViewById(R.id.gui).setVisibility(View.VISIBLE);
+                    findViewById(R.id.progressBar).setVisibility(View.GONE);
                 }
 
             }.execute();

@@ -29,7 +29,8 @@ public class MainActivity extends AppCompatActivity {
 
         appData = new AppData(this);
 
-        findViewById(R.id.gui).setVisibility(View.INVISIBLE);
+        findViewById(R.id.gui).setVisibility(View.GONE);
+        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -50,24 +51,30 @@ public class MainActivity extends AppCompatActivity {
                         && playerState.track.uri.equals(RandomSongProvider.chosenSongs.get(0).uri)) {
 
                     spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().resume();
+                    ((Button) findViewById(R.id.play_button)).setText("pause");
                     Log.v("sm_MAIN", "Resume button pressed");
 
-                } else { // something else or nothing is playing
-
-                    spotifyPlaylist.startPlayback();
-                    Log.v("sm_MAIN", "Start button pressed");
-
+                    return;
                 }
-
-                ((Button)findViewById(R.id.play_button)).setText("pause");
 
             } else {
 
-                spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().pause();
-                ((Button)findViewById(R.id.play_button)).setText("play");
-                Log.v("sm_MAIN", "Continue button pressed");
+                // if chosen song is playing
+                if (playerState.playbackPosition > 1000
+                        && playerState.track.uri.equals(RandomSongProvider.chosenSongs.get(0).uri)) {
 
+                    spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().pause();
+                    ((Button)findViewById(R.id.play_button)).setText("play");
+                    Log.v("sm_MAIN", "Pause button pressed");
+
+                    return;
+                }
             }
+
+            spotifyPlaylist.startPlayback();
+            ((Button) findViewById(R.id.play_button)).setText("pause");
+            Log.v("sm_MAIN", "Start button pressed");
+
         });
     }
 
@@ -96,6 +103,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void changeNextSong() {
 
+        findViewById(R.id.nextUpCard).setVisibility(View.INVISIBLE);
+        findViewById(R.id.progressBar2).setVisibility(View.VISIBLE);
+
         if (spotifyPlaylist.chosenButSkipped.equals("")) {
             spotifyPlaylist.chosenButSkipped = RandomSongProvider.chosenSongs.get(1).uri;
         }
@@ -113,6 +123,9 @@ public class MainActivity extends AppCompatActivity {
 
                 setNextSongUI(RandomSongProvider.chosenSongs.get(1));
                 updateNotification();
+
+                findViewById(R.id.nextUpCard).setVisibility(View.VISIBLE);
+                findViewById(R.id.progressBar2).setVisibility(View.GONE);
 
             });
         }).start();
