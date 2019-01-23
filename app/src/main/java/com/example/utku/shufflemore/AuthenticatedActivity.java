@@ -21,6 +21,7 @@ import android.widget.Toast;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -72,8 +73,10 @@ public class AuthenticatedActivity extends MainActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         unregisterReceiver(broadcastReceiver);
         stopService(spotifyRemoteService);
+        SpotifyAppRemote.disconnect(spotifyPlaylist.mSpotifyAppRemote);
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -104,7 +107,7 @@ public class AuthenticatedActivity extends MainActivity {
     @SuppressLint("StaticFieldLeak")
     private void postAuthentication() {
 
-        Log.v("sm_AUTHACT", "Authentication complete");
+        Log.v("sm_AUTHACT", "Authentication complete, user: " + AppData.userId);
 
         String connected_message = "Connected as " + "<b>" + AppData.userId + "</b>";
         ((TextView)findViewById(R.id.display_name)).setText(Html.fromHtml(connected_message));
@@ -271,6 +274,8 @@ public class AuthenticatedActivity extends MainActivity {
     @SuppressLint("StaticFieldLeak")
     protected void startJob() {
 
+        Log.v("sm_AUTHACT", "Starting job");
+
         spotifyPlaylist = new Playlist(this, appData);
         randomSongProvider = new RandomSongProvider(appData);
 
@@ -323,51 +328,53 @@ public class AuthenticatedActivity extends MainActivity {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction("shufflemore.updateUI");
+
+        Log.v("sm_AUTHACT", "Registering broadcast receiver");
         registerReceiver(broadcastReceiver, filter);
 
         final Context context = this;
-        if (RandomSongProvider.chosenSongs.isEmpty()) {
 
-            new AsyncTask<Void , Void, Void>()
-            {
-                @Override
-                protected Void doInBackground (Void... v)  {
+        Log.v("sm_AUTHACT", "Chosen songs list is empty");
 
-                    if (!spotifyPlaylist.alreadyExists())
-                        spotifyPlaylist.create();
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... v) {
 
-                    RandomSongProvider.chosenSongs.clear();
-                    RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks());
-                    while (RandomSongProvider.chosenSongs.size() < 2) {
+                if (!spotifyPlaylist.alreadyExists())
+                    spotifyPlaylist.create();
 
-                        RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
-                        RandomSongProvider.chosenSongs.add(newSong);
-                        spotifyPlaylist.addTrack(newSong.uri);
-                    }
+                RandomSongProvider.chosenSongs.clear();
+                RandomSongProvider.chosenSongs.addAll(spotifyPlaylist.getTracks());
+                while (RandomSongProvider.chosenSongs.size() < 2) {
 
-                    return null;
+                    RandomSongProvider.Song newSong = randomSongProvider.getNewSong(context);
+                    RandomSongProvider.chosenSongs.add(newSong);
+                    spotifyPlaylist.addTrack(newSong.uri);
                 }
 
-                @Override
-                protected void onPostExecute(Void v){
+                return null;
+            }
 
-                    spotifyRemoteService = new Intent(context, RemoteService.class);
+            @Override
+            protected void onPostExecute(Void v) {
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        context.startForegroundService(spotifyRemoteService);
-                    } else {
-                        startService(spotifyRemoteService);
-                    }
+                Log.v("sm_AUTHACT", "Creating remote service");
+                spotifyRemoteService = new Intent(context, RemoteService.class);
 
-                    updateUI(RandomSongProvider.chosenSongs.get(0),
-                            RandomSongProvider.chosenSongs.get(1));
-
-                    findViewById(R.id.gui).setVisibility(View.VISIBLE);
-                    findViewById(R.id.progressBar).setVisibility(View.GONE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(spotifyRemoteService);
+                } else {
+                    startService(spotifyRemoteService);
                 }
 
-            }.execute();
-        }
+                updateUI(RandomSongProvider.chosenSongs.get(0),
+                        RandomSongProvider.chosenSongs.get(1));
+
+                findViewById(R.id.gui).setVisibility(View.VISIBLE);
+                findViewById(R.id.progressBar).setVisibility(View.GONE);
+            }
+
+        }.execute();
     }
 
 }
