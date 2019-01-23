@@ -47,6 +47,8 @@ class Playlist {
 
     Playlist(final Context context, AppData appData) {
 
+        Log.v("sm_PLAYLIST", "Creating playlist object");
+
         this.context = context;
         this.appData = appData;
 
@@ -71,44 +73,43 @@ class Playlist {
                             //      + playerState.track.name  + ", " + playerState.playbackPosition);
 
                             String currentSong = playerState.track.uri;
-                            int lastIndex = RandomSongProvider.chosenSongs.size()-1;
-                            String lastInPlaylist = RandomSongProvider.chosenSongs.get(lastIndex).uri;
+                            String secondInPlaylist = RandomSongProvider.chosenSongs.get(1).uri;
 
 
-                            // if not getting repeat callbacks for the same song
-                            if (!currentSong.equals(lastCallback) &&
-                                    (currentSong.equals(lastInPlaylist) || currentSong.equals(chosenButSkipped))) {
+                            if (!lastCallback.equals("") && !lastCallback.equals(currentSong)) {
+                                if (currentSong.equals(secondInPlaylist) || currentSong.equals(chosenButSkipped)) {
 
-                                Log.v("sm_PLAYLIST","Song ended, adjusting next up");
+                                    Log.v("sm_PLAYLIST","Song ended, adjusting next up");
 
-                                new AsyncTask<Void , Void, Song>()
-                                {
-                                    @Override
-                                    protected Song doInBackground (Void... v)  {
+                                    new AsyncTask<Void , Void, Song>()
+                                    {
+                                        @Override
+                                        protected Song doInBackground (Void... v)  {
 
-                                        pausePlayback();
-                                        return randomSongProvider.getNewSong(context);
-                                    }
+                                            pausePlayback();
+                                            return randomSongProvider.getNewSong(context);
+                                        }
 
-                                    @Override
-                                    protected void onPostExecute(final Song newSong){
+                                        @Override
+                                        protected void onPostExecute(final Song newSong){
 
-                                        new Thread(() -> {
+                                            new Thread(() -> {
 
-                                            boolean removed = removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
-                                            if (removed)
-                                                RandomSongProvider.chosenSongs.remove(0);
+                                                boolean removed = removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
+                                                if (removed)
+                                                    RandomSongProvider.chosenSongs.remove(0);
 
-                                            addTrack(newSong.uri); // TODO: add success check
-                                            RandomSongProvider.chosenSongs.add(newSong);
+                                                addTrack(newSong.uri); // TODO: add success check
+                                                RandomSongProvider.chosenSongs.add(newSong);
 
-                                            chosenButSkipped = "";
-                                            startPlayback();
-                                            context.sendBroadcast(new Intent("shufflemore.updateUI"));
+                                                chosenButSkipped = "";
+                                                startPlayback();
+                                                context.sendBroadcast(new Intent("shufflemore.updateUI"));
 
-                                        }).start();
-                                    }
-                                }.execute();
+                                            }).start();
+                                        }
+                                    }.execute();
+                                }
                             }
 
                             lastCallback = playerState.track.uri;
