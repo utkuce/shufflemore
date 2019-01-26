@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.util.Pair;
 
 public class RemoteService extends Service {
 
@@ -46,28 +47,34 @@ public class RemoteService extends Service {
 
         Log.v("sm_REMOTE", "Building notification");
 
-        Intent notificationIntent = new Intent(context, Playlist.class);
-        PendingIntent pendingIntent = PendingIntent.getService(context, 0, notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent notificationIntent = new Intent(context, AuthenticatedActivity.class);
+        notificationIntent.addCategory(Intent.ACTION_MAIN);
+        notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        Intent changeButton = new Intent("shufflemore.changenext");
-        PendingIntent changeNext = PendingIntent.getBroadcast(context, 1, changeButton,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pNotificationIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification.Builder builder =  new Notification.Builder(context)
-
                 .setSubText("Next up")
-
-                .addAction(R.drawable.round_play_circle_outline_24, "play", null)
-                .addAction(R.drawable.round_refresh_24, "shuffle", changeNext)
-                .addAction(R.drawable.round_album_24, "album", null)
-                .addAction(R.drawable.round_people_24, "artist", null)
-                .addAction(R.drawable.round_close_24, "close", null)
-
                 .setSmallIcon(R.drawable.round_shuffle_24)
-
-                .setContentIntent(pendingIntent)
+                .setContentIntent(pNotificationIntent)
                 .setOngoing(true);
+
+        Pair[] actions = new Pair[]{
+
+                new Pair<>("shufflemore.changenext", R.drawable.round_refresh_24),
+                new Pair<>("shufflemore.playnext", R.drawable.round_play_circle_outline_24),
+                new Pair<>("shufflemore.gotoalbum", R.drawable.round_album_24),
+                new Pair<>("shufflemore.gotoartist", R.drawable.round_people_24),
+                new Pair<>("shufflemore.stopservice", R.drawable.round_close_24)
+        };
+
+        for (int i=0; i < actions.length; i++) {
+
+            Intent actionIntent = new Intent(actions[i].first.toString());
+            PendingIntent pActionIntent = PendingIntent.getBroadcast(context, i+1, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            builder.addAction((int)actions[i].second, actions[i].first.toString(), pActionIntent);
+        }
 
         NotificationManager mNotificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
