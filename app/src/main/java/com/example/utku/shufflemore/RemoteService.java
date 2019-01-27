@@ -41,6 +41,8 @@ public class RemoteService extends Service {
         NotificationManager nm;
         if (((nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE))) != null)
             nm.cancel(notificationId);
+
+        Playlist.disconnetcAppRemote();
     }
 
     public static Notification.Builder getNotification(Context context) {

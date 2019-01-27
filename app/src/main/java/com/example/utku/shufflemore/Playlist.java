@@ -35,7 +35,7 @@ class Playlist {
     private Context context;
     private AppData appData;
 
-    SpotifyAppRemote mSpotifyAppRemote;
+    static SpotifyAppRemote mSpotifyAppRemote;
     private static Connector.ConnectionListener connectionListener;
     private boolean remoteConnected = false;
 
@@ -143,6 +143,11 @@ class Playlist {
 
         SpotifyAppRemote.connect(context, connectionParams, connectionListener);
 
+    }
+
+    static void disconnetcAppRemote() {
+
+        SpotifyAppRemote.disconnect(mSpotifyAppRemote);
     }
 
     void create() {

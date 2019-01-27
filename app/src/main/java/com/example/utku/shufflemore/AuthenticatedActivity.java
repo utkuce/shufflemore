@@ -14,14 +14,12 @@ import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -76,7 +74,6 @@ public class AuthenticatedActivity extends MainActivity {
 
         unregisterReceiver(broadcastReceiver);
         stopService(spotifyRemoteService);
-        SpotifyAppRemote.disconnect(spotifyPlaylist.mSpotifyAppRemote);
     }
 
     @SuppressLint("StaticFieldLeak")
