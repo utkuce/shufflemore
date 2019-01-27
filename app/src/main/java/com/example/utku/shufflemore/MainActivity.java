@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         appData = new AppData(this);
 
         findViewById(R.id.gui).setVisibility(View.GONE);
-        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+        findViewById(R.id.splash).setVisibility(View.VISIBLE);
     }
 
     @Override

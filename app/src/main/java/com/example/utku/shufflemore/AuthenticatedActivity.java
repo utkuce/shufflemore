@@ -62,6 +62,8 @@ public class AuthenticatedActivity extends MainActivity {
         super.onCreate(savedInstanceState);
 
         Log.v("sm_AUTHACT", "Checking authentication");
+        ((TextView)findViewById(R.id.splash_text)).setText("Checking authentication...");
+
         if (appData.getRefreshToken() == null)
             authenticateUser();
         else
@@ -115,6 +117,7 @@ public class AuthenticatedActivity extends MainActivity {
     public void authenticateUser() {
 
         Log.v("sm_AUTHACT", "Authenticating user");
+        ((TextView)findViewById(R.id.splash_text)).setText("Authenticating user...");
 
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(appData.CLIENT_ID,
                 AuthenticationResponse.Type.CODE, REDIRECT_URI);
@@ -126,9 +129,11 @@ public class AuthenticatedActivity extends MainActivity {
     private void setUserInfo() {
 
         Log.v("sm_AUTHACT", "Setting user info");
+        ((TextView)findViewById(R.id.splash_text)).setText("Setting user info...");
 
         final Context context = this;
-        runOnUiThread(() -> authDialog = ProgressDialog.show(context, "","Retrieving user id...",true));
+        //runOnUiThread(() -> authDialog = ProgressDialog.show(context, "","Retrieving user id...",true));
+        ((TextView)findViewById(R.id.splash_text)).setText("Retrieving user id...");
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -165,7 +170,7 @@ public class AuthenticatedActivity extends MainActivity {
 
                     @Override
                     public void onFinish() {
-                        authDialog.cancel();
+                        //authDialog.cancel();
                     }
                 });
     }
@@ -207,7 +212,8 @@ public class AuthenticatedActivity extends MainActivity {
         Log.v("sm_AUTHACT", "Retrieving refresh token");
 
         final Context context = this;
-        runOnUiThread(() -> authDialog = ProgressDialog.show(context, "","Retrieving refresh token...",true));
+        //runOnUiThread(() -> authDialog = ProgressDialog.show(context, "","Retrieving refresh token...",true));
+        ((TextView)findViewById(R.id.splash_text)).setText("Retrieving refresh token...");
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
@@ -263,7 +269,7 @@ public class AuthenticatedActivity extends MainActivity {
 
             @Override
             public void onFinish() {
-                authDialog.cancel();
+                //authDialog.cancel();
             }
         });
     }
@@ -273,6 +279,7 @@ public class AuthenticatedActivity extends MainActivity {
 
         Log.v("sm_AUTHACT", "Starting job");
 
+        ((TextView)findViewById(R.id.splash_text)).setText("Creating playlist object...");
         spotifyPlaylist = new Playlist(this, appData);
         randomSongProvider = new RandomSongProvider(appData);
 
@@ -356,6 +363,7 @@ public class AuthenticatedActivity extends MainActivity {
             protected void onPostExecute(Void v) {
 
                 Log.v("sm_AUTHACT", "Creating remote service");
+                ((TextView)findViewById(R.id.splash_text)).setText("Creating service...");
                 spotifyRemoteService = new Intent(context, RemoteService.class);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -368,7 +376,7 @@ public class AuthenticatedActivity extends MainActivity {
                         RandomSongProvider.chosenSongs.get(1));
 
                 findViewById(R.id.gui).setVisibility(View.VISIBLE);
-                findViewById(R.id.progressBar).setVisibility(View.GONE);
+                findViewById(R.id.splash).setVisibility(View.GONE);
             }
 
         }.execute();
