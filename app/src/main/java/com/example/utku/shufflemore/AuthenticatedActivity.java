@@ -129,17 +129,16 @@ public class AuthenticatedActivity extends MainActivity {
     private void setUserInfo() {
 
         Log.v("sm_AUTHACT", "Setting user info");
-        ((TextView)findViewById(R.id.splash_text)).setText("Setting user info...");
+        runOnUiThread(() -> { ((TextView)findViewById(R.id.splash_text)).setText("Setting user info..."); });
 
-        final Context context = this;
-        //runOnUiThread(() -> authDialog = ProgressDialog.show(context, "","Retrieving user id...",true));
-        ((TextView)findViewById(R.id.splash_text)).setText("Retrieving user id...");
 
         SyncHttpClient client = new SyncHttpClient();
         RequestParams params = new RequestParams();
 
         client.addHeader("Authorization", "Bearer " + appData.getAccessToken());
         params.put("Accept", "application/json");
+
+        runOnUiThread(() -> { ((TextView)findViewById(R.id.splash_text)).setText("Retrieving user id..."); });
 
         client.get("https://api.spotify.com/v1/me/", params,
 
