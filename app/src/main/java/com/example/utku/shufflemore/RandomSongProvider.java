@@ -32,6 +32,8 @@ class RandomSongProvider
 
     private AppData appData;
     RandomSongProvider(AppData appData) {
+
+        Log.v("sm_RANDSONG", "Creating song provider object");
         this.appData = appData;
     }
 
@@ -213,7 +215,7 @@ class RandomSongProvider
             // cover
             JSONObject album = track.getJSONObject("album");
             JSONArray images = album.getJSONArray("images");
-            String coverUrl = images.getJSONObject(1).get("url").toString(); //TODO image quality option
+            String coverUrl = images.getJSONObject(0).get("url").toString(); //TODO image quality option
 
             song.cover = drawableFromUrl(coverUrl);
 
