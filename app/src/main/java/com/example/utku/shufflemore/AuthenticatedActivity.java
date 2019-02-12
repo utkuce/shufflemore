@@ -90,7 +90,7 @@ public class AuthenticatedActivity extends MainActivity {
                     break;
 
                 case "shufflemore.playnext":
-                    activity.spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().skipNext();
+                    activity.spotifyPlaylist.playNext();
                     break;
 
                 case "shufflemore.gotoalbum":

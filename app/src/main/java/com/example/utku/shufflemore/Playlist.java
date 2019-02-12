@@ -80,38 +80,7 @@ class Playlist {
                                 if (currentSong.equals(secondInPlaylist) || currentSong.equals(chosenButSkipped)) {
 
                                     Log.v("sm_PLAYLIST","Song ended, adjusting next up");
-
-                                    new AsyncTask<Void , Void, Song>()
-                                    {
-                                        @Override
-                                        protected Song doInBackground (Void... v)  {
-
-                                            pausePlayback();
-                                            return randomSongProvider.getNewSong(context);
-                                        }
-
-                                        @Override
-                                        protected void onPostExecute(final Song newSong){
-
-                                            new Thread(() -> {
-
-                                                boolean removed = removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
-                                                if (removed)
-                                                    RandomSongProvider.chosenSongs.remove(0);
-
-                                                addTrack(newSong.uri); // TODO: add success check
-                                                RandomSongProvider.chosenSongs.add(newSong);
-
-                                                chosenButSkipped = "";
-                                                startPlayback();
-
-                                                Intent updateUI = new Intent(context, AuthenticatedActivity.MyBroadcastReceiver.class);
-                                                updateUI.setAction("shufflemore.updateUI");
-                                                context.sendBroadcast(updateUI);
-
-                                            }).start();
-                                        }
-                                    }.execute();
+                                    playNext();
                                 }
                             }
 
@@ -134,6 +103,43 @@ class Playlist {
                 */
             }
         };
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    void playNext() {
+
+        new AsyncTask<Void , Void, Song>()
+        {
+            @Override
+            protected Song doInBackground (Void... v)  {
+
+                pausePlayback();
+                return randomSongProvider.getNewSong(context);
+            }
+
+            @Override
+            protected void onPostExecute(final Song newSong){
+
+                new Thread(() -> {
+
+                    boolean removed = removeTrack(RandomSongProvider.chosenSongs.get(0).uri);
+                    if (removed)
+                        RandomSongProvider.chosenSongs.remove(0);
+
+                    addTrack(newSong.uri); // TODO: add success check
+                    RandomSongProvider.chosenSongs.add(newSong);
+
+                    chosenButSkipped = "";
+                    startPlayback();
+
+                    Intent updateUI = new Intent(context, AuthenticatedActivity.MyBroadcastReceiver.class);
+                    updateUI.setAction("shufflemore.updateUI");
+                    context.sendBroadcast(updateUI);
+
+                }).start();
+            }
+        }.execute();
+
     }
 
     @SuppressLint("StaticFieldLeak")
