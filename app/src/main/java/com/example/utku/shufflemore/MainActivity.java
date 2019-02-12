@@ -182,6 +182,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void skipButton(View view) {
 
-        spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().skipNext();
+        spotifyPlaylist.playNext();
     }
 }
