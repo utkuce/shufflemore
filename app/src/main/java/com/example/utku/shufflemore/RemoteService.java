@@ -72,7 +72,8 @@ public class RemoteService extends Service {
 
         for (int i=0; i < actions.length; i++) {
 
-            Intent actionIntent = new Intent(actions[i].first.toString());
+            Intent actionIntent = new Intent(context, AuthenticatedActivity.MyBroadcastReceiver.class);
+            actionIntent.setAction(actions[i].first.toString());
             PendingIntent pActionIntent = PendingIntent.getBroadcast(context, i+1, actionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             builder.addAction((int)actions[i].second, actions[i].first.toString(), pActionIntent);

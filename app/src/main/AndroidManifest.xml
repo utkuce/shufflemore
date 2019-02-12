@@ -22,6 +22,8 @@
         <activity android:name=".MainActivity"/>
         <service android:name=".RemoteService"/>
 
+        <receiver android:name=".AuthenticatedActivity$MyBroadcastReceiver"/>
+
     </application>
 
 </manifest>

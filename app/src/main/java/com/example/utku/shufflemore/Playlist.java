@@ -104,7 +104,10 @@ class Playlist {
 
                                                 chosenButSkipped = "";
                                                 startPlayback();
-                                                context.sendBroadcast(new Intent("shufflemore.updateUI"));
+
+                                                Intent updateUI = new Intent(context, AuthenticatedActivity.MyBroadcastReceiver.class);
+                                                updateUI.setAction("shufflemore.updateUI");
+                                                context.sendBroadcast(updateUI);
 
                                             }).start();
                                         }

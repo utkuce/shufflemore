@@ -105,6 +105,11 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.nextUpCard).setVisibility(View.INVISIBLE);
         findViewById(R.id.progressBar2).setVisibility(View.VISIBLE);
+        ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
+                .notify(RemoteService.notificationId, RemoteService.getNotification(this)
+                        .setContentTitle("Please wait...")
+                        .setContentText("Getting new song")
+                        .build());
 
         if (spotifyPlaylist.chosenButSkipped.equals("")) {
             spotifyPlaylist.chosenButSkipped = RandomSongProvider.chosenSongs.get(1).uri;

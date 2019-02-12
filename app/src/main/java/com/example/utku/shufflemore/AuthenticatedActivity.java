@@ -2,7 +2,6 @@ package com.example.utku.shufflemore;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -40,8 +39,6 @@ public class AuthenticatedActivity extends MainActivity {
     static final String REDIRECT_URI = "shufflemore://callback";
     private final int REQUEST_CODE = 1234;
 
-    private ProgressDialog authDialog;
-
     final String[] spotifyApiPermissions = new String[]{
 
             "user-library-read",
@@ -53,7 +50,68 @@ public class AuthenticatedActivity extends MainActivity {
             "app-remote-control"
     };
 
-    private BroadcastReceiver broadcastReceiver;
+    public static class MyBroadcastReceiver extends BroadcastReceiver {
+
+        static AuthenticatedActivity activity;
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (activity == null) {
+                Log.e("sm_AUTHACT", "Activity for broadcast receiver not set");
+                return;
+            }
+
+            Log.v("sm_AUTHACT", "Broadcast onReceive called");
+            String action = intent.getAction();
+
+            if (action == null) {
+                Log.e("sm_AUTHACT", "Received empty action");
+                return;
+            }
+
+            Log.v("sm_AUTHACT", "intent received: " + action);
+
+            switch (action) {
+
+                case "shufflemore.updateUI":
+
+                    activity.runOnUiThread(() -> {
+
+                        activity.updateUI(RandomSongProvider.chosenSongs.get(0),
+                                RandomSongProvider.chosenSongs.get(1));
+                    });
+
+                    break;
+
+                case "shufflemore.changenext":
+
+                    activity.changeNextSong();
+                    break;
+
+                case "shufflemore.playnext":
+                    activity.spotifyPlaylist.mSpotifyAppRemote.getPlayerApi().skipNext();
+                    break;
+
+                case "shufflemore.gotoalbum":
+
+                    break;
+
+                case "shufflemore.gotoartist":
+
+                    break;
+
+                case "shufflemore.stopservice":
+                    activity.stopService(activity.spotifyRemoteService);
+                    break;
+
+                default:
+
+            }
+
+        }
+    };
+
     private Intent spotifyRemoteService;
 
     @Override
@@ -74,7 +132,7 @@ public class AuthenticatedActivity extends MainActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        unregisterReceiver(broadcastReceiver);
+        //unregisterReceiver(broadcastReceiver);
         stopService(spotifyRemoteService);
     }
 
@@ -281,59 +339,13 @@ public class AuthenticatedActivity extends MainActivity {
         ((TextView)findViewById(R.id.splash_text)).setText("Creating playlist object...");
         spotifyPlaylist = new Playlist(this, appData);
         randomSongProvider = new RandomSongProvider(appData);
-
-        broadcastReceiver = new BroadcastReceiver() {
-
-            @Override
-            public void onReceive(final Context context, Intent intent) {
-                String action = intent.getAction();
-
-                if (action != null) {
-
-                    Log.v("sm_AUTHACT", "intent received: " + action);
-
-                    switch (action) {
-
-                        case "shufflemore.updateUI":
-
-                            runOnUiThread(() -> {
-
-                                updateUI(RandomSongProvider.chosenSongs.get(0),
-                                        RandomSongProvider.chosenSongs.get(1));
-                            });
-
-                            break;
-
-                        case "shufflemore.changenext":
-
-                            changeNextSong();
-                            break;
-
-                        case "shufflemore.gotoalbum":
-                            break;
-
-                        case "shufflemore.gotoartist":
-                            break;
-
-                        case "shufflemore.stopservice":
-                            stopService(spotifyRemoteService);
-                            break;
-
-                        default:
-
-                    }
-
-                } else {
-                    Log.e("sm_AUTHACT", "Received empty action");
-                }
-            }
-        };
+        MyBroadcastReceiver.activity = this;
 
         IntentFilter filter = new IntentFilter();
         filter.addAction("shufflemore.updateUI");
 
-        Log.v("sm_AUTHACT", "Registering broadcast receiver");
-        registerReceiver(broadcastReceiver, filter);
+        //Log.v("sm_AUTHACT", "Registering broadcast receiver");
+        //registerReceiver(broadcastReceiver, filter);
 
         final Context context = this;
 
