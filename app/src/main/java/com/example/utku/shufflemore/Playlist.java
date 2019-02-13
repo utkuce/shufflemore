@@ -154,7 +154,7 @@ class Playlist {
 
     }
 
-    static void disconnetcAppRemote() {
+    static void disconnectAppRemote() {
 
         SpotifyAppRemote.disconnect(mSpotifyAppRemote);
     }

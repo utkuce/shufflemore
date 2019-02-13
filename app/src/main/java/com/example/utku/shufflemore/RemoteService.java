@@ -42,7 +42,7 @@ public class RemoteService extends Service {
         if (((nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE))) != null)
             nm.cancel(notificationId);
 
-        Playlist.disconnetcAppRemote();
+        Playlist.disconnectAppRemote();
     }
 
     public static Notification.Builder getNotification(Context context) {
