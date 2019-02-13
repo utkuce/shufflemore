@@ -110,6 +110,7 @@ public class AuthenticatedActivity extends MainActivity {
 
                 case "shufflemore.stopservice":
                     activity.stopService(activity.spotifyRemoteService);
+                    activity.finish();
                     break;
 
                 default:
