@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -102,9 +103,21 @@ public class AuthenticatedActivity extends MainActivity {
 
                 case "shufflemore.gotoalbum":
 
+                    String uriAlbum = RandomSongProvider.chosenSongs.get(1).uriAlbum;
+                    Log.v("sm_AUTHACT", "Go to album clicked: " + uriAlbum);
+
+                    Intent albumIntent = new Intent( Intent.ACTION_VIEW, Uri.parse(uriAlbum) );
+                    activity.startActivity(albumIntent);
+
                     break;
 
                 case "shufflemore.gotoartist":
+
+                    String uriArtist = RandomSongProvider.chosenSongs.get(1).uriArtist;
+                    Log.v("sm_AUTHACT", "Go to artist clicked: " + uriArtist);
+
+                    Intent artistIntent = new Intent( Intent.ACTION_VIEW, Uri.parse(uriArtist) );
+                    activity.startActivity(artistIntent);
 
                     break;
 

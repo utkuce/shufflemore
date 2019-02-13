@@ -61,7 +61,8 @@ class RandomSongProvider
 
     static class Song {
 
-        String uri, name, artist;
+        String uri, uriAlbum, uriArtist;
+        String name, artist;
         Bitmap cover;
         boolean playable;
     }
@@ -209,6 +210,8 @@ class RandomSongProvider
             }
             song.artist = artistsList.toString().substring(0, artistsList.length()-2);
 
+            song.uriArtist = artists.getJSONObject(0).get("uri").toString();
+
             // name
             song.name = track.get("name").toString();
 
@@ -216,6 +219,8 @@ class RandomSongProvider
             JSONObject album = track.getJSONObject("album");
             JSONArray images = album.getJSONArray("images");
             String coverUrl = images.getJSONObject(0).get("url").toString(); //TODO image quality option
+
+            song.uriAlbum = album.get("uri").toString();
 
             song.cover = drawableFromUrl(coverUrl);
 
