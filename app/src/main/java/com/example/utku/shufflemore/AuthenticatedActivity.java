@@ -2,6 +2,7 @@ package com.example.utku.shufflemore;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -90,6 +91,12 @@ public class AuthenticatedActivity extends MainActivity {
                     break;
 
                 case "shufflemore.playnext":
+
+                    ((NotificationManager) activity.getSystemService(Context.NOTIFICATION_SERVICE))
+                            .notify(RemoteService.notificationId, RemoteService.getNotification(activity)
+                                    .setContentTitle("Please wait...")
+                                    .setContentText("Getting new song")
+                                    .build());
                     activity.spotifyPlaylist.playNext();
                     break;
 
