@@ -37,7 +37,6 @@ class Playlist {
 
     static SpotifyAppRemote mSpotifyAppRemote;
     private static Connector.ConnectionListener connectionListener;
-    private boolean remoteConnected = false;
 
     private RandomSongProvider randomSongProvider;
 
@@ -61,7 +60,7 @@ class Playlist {
                 mSpotifyAppRemote = spotifyAppRemote;
                 Log.v("sm_PLAYLIST","Spotify App Remote connected");
                 Toast.makeText(context, "Spotify App Remote connected", Toast.LENGTH_SHORT).show();
-                remoteConnected = true;
+                RemoteService.connected = true;
 
                 randomSongProvider = new RandomSongProvider(appData);
 
@@ -90,7 +89,12 @@ class Playlist {
 
             @Override
             public void onFailure(Throwable throwable) {
+
                 Log.w("sm_PLAYLIST", "Connection lost to Spotify App Remote, reconnecting");
+
+                Log.w("sm_PLAYLIST", throwable.getMessage());
+                RemoteService.connected = false;
+
                 connectAppRemote(context);
 
                 /*
@@ -249,6 +253,10 @@ class Playlist {
                     }
                 });
 
+        if (!alreadyExists) {
+            Log.w("sm_PLAYLIST", "Playlist not found");
+        }
+
         return alreadyExists;
     }
 
@@ -273,12 +281,18 @@ class Playlist {
             jsonParams.put("uris", jsonArray);
 
         } catch (JSONException e) {
+
+            Log.e("sm_PLAYLIST", "Adding track error: " + e.getMessage());
             e.printStackTrace();
         }
 
         try {
+
             data = new StringEntity(jsonParams.toString());
+
         } catch (UnsupportedEncodingException e) {
+
+            Log.e("sm_PLAYLIST", "Adding track error: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -294,8 +308,8 @@ class Playlist {
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject res) {
 
-                Toast.makeText(context, statusCode + " Playlist could not be created", Toast.LENGTH_LONG).show();
-                Log.e("sm_PLAYLIST",statusCode + " res: " + res);
+                Toast.makeText(context, statusCode + " Adding new track to playlist failed", Toast.LENGTH_LONG).show();
+                Log.e("sm_PLAYLIST","Adding new track to playlist failed, code: " + statusCode + " res: " + res);
             }
 
         });
@@ -384,6 +398,8 @@ class Playlist {
                             }
 
                         } catch (JSONException e) {
+
+                            Log.e("sm_PLAYLIST", "Getting tracks error: " + e.getMessage());
                             e.printStackTrace();
                         }
 
@@ -391,7 +407,7 @@ class Playlist {
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject response) {
-                        Log.e("sm_PLAYLIST","Status code: " + statusCode + "Get tracks failed, responsea: " + response);
+                        Log.e("sm_PLAYLIST","Status code: " + statusCode + "Get tracks failed, response: " + response);
                     }
                 });
 
@@ -401,7 +417,7 @@ class Playlist {
     void startPlayback() {
 
         Log.v("sm_PLAYLIST","Starting playback");
-        if (remoteConnected)
+        if (RemoteService.connected)
             mSpotifyAppRemote.getPlayerApi().play(String.format("spotify:user:%s:playlist:%s", AppData.userId, this.id));
 
         //TODO: else error

@@ -17,6 +17,7 @@ public class RemoteService extends Service {
 
     public static Notification.Builder notificationBuilder;
     public static int notificationId = 123;
+    public static volatile boolean connected = false;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {

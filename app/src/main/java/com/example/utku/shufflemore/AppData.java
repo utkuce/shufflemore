@@ -2,7 +2,6 @@ package com.example.utku.shufflemore;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -99,7 +98,7 @@ public class AppData {
             }
         }
 
-        Log.v("sm_APPDATA","Refresh token read: ");//+ refreshToken);
+        Log.v("sm_APPDATA","Refresh token read");//+ refreshToken);
         return refreshToken;
     }
 
