@@ -4,5 +4,6 @@
 
 SHA1 for android package must be added to spotify developer dashboard
 
+## Screenshots
 <img src="https://github.com/utkuce/shufflemore/blob/master/Screenshot1.png" alt="interface" width="350"/> <img src="https://github.com/utkuce/shufflemore/blob/master/Screenshot2.jpeg" alt="notification" width="350"/>
 
