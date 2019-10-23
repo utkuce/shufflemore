@@ -117,7 +117,7 @@ class Playlist {
             @Override
             protected Song doInBackground (Void... v)  {
 
-                pausePlayback();
+                //pausePlayback();
                 return randomSongProvider.getNewSong(context);
             }
 
@@ -134,7 +134,7 @@ class Playlist {
                     RandomSongProvider.chosenSongs.add(newSong);
 
                     chosenButSkipped = "";
-                    startPlayback();
+                    //startPlayback();
 
                     Intent updateUI = new Intent(context, AuthenticatedActivity.MyBroadcastReceiver.class);
                     updateUI.setAction("shufflemore.updateUI");
